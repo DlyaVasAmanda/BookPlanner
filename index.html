@@ -1,0 +1,1552 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Компас дня — Семейный планер & Бюджет</title>
+
+<!-- PWA Web App Manifest (Inline via Data URI) -->
+<link rel="manifest" href='data:application/manifest+json,{"name":"Компас дня","short_name":"Компас","start_url":".","display":"standalone","background_color":"#141519","theme_color":"#0E7C73","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/854/854878.png","sizes":"512x512","type":"image/png"}]}'>
+<meta name="theme-color" content="#0E7C73">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<script>
+  tailwind.config = {
+    darkMode: 'class',
+    theme: {
+      extend: {
+        fontFamily: {
+          sans: ['Inter', 'ui-sans-serif', 'system-ui'],
+          mono: ['IBM Plex Mono', 'ui-monospace']
+        },
+        colors: {
+          paper: '#FAF9F6',
+          ink: '#1C1C1E',
+          surface: { DEFAULT: '#FFFFFF', dark: '#1D1F23' },
+          base: { DEFAULT: '#FAF9F6', dark: '#141519' },
+          line: { DEFAULT: '#E7E4DD', dark: '#2A2C32' },
+          muted: { DEFAULT: '#7A7873', dark: '#8C8E96' },
+          accent: { DEFAULT: '#0E7C73', soft: '#DFF3EF', dark: '#3FBDAF' },
+          rose: { DEFAULT: '#C2483B', soft: '#F7E3E0' },
+          amber: { DEFAULT: '#B8791A', soft: '#F5EAD6' },
+          leaf: { DEFAULT: '#3E7D4C', soft: '#E1EFE2' }
+        },
+        borderRadius: { xl2: '1.1rem' }
+      }
+    }
+  }
+</script>
+<style>
+  html { scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; }
+  body { -webkit-font-smoothing: antialiased; }
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-thumb { background: #C9C5BB; border-radius: 8px; }
+  .dark ::-webkit-scrollbar-thumb { background: #34363c; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  .tab-panel { animation: fadeIn .25s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+  .strike { text-decoration: line-through; opacity: .55; }
+  .ring-focus:focus-visible { outline: 2px solid #0E7C73; outline-offset: 2px; }
+</style>
+</head>
+<body class="bg-base dark:bg-base-dark text-ink dark:text-[#EDEDEC] font-sans min-h-screen transition-colors duration-200">
+
+<!-- Auth Modal -->
+<div id="auth-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4">
+  <div class="bg-surface dark:bg-surface-dark border border-line dark:border-line-dark rounded-xl2 max-w-md w-full p-5 sm:p-6 shadow-2xl">
+    <div class="flex items-center gap-3 mb-5">
+      <div class="w-10 h-10 rounded-xl bg-accent flex items-center justify-center shrink-0">
+        <i data-lucide="compass" class="w-6 h-6 text-white"></i>
+      </div>
+      <div>
+        <h2 class="text-lg sm:text-xl font-bold">Компас дня</h2>
+        <p class="text-xs text-muted dark:text-muted-dark">Семейный планер и учет трат</p>
+      </div>
+    </div>
+
+    <!-- Auth Tabs -->
+    <div class="flex border-b border-line dark:border-line-dark mb-4">
+      <button id="auth-tab-login" class="flex-1 py-2 text-sm font-medium border-b-2 border-accent text-accent">Вход</button>
+      <button id="auth-tab-register" class="flex-1 py-2 text-sm font-medium border-b-2 border-transparent text-muted dark:text-muted-dark">Регистрация</button>
+    </div>
+
+    <form id="auth-form" class="space-y-3.5">
+      <div>
+        <label class="block text-xs text-muted dark:text-muted-dark mb-1">Email</label>
+        <input required type="email" id="auth-email" placeholder="you@example.com" class="w-full rounded-lg border border-line dark:border-line-dark bg-transparent px-3 py-2 text-sm ring-focus">
+      </div>
+      <div>
+        <label class="block text-xs text-muted dark:text-muted-dark mb-1">Пароль</label>
+        <input required type="password" id="auth-password" placeholder="••••••••" class="w-full rounded-lg border border-line dark:border-line-dark bg-transparent px-3 py-2 text-sm ring-focus">
+      </div>
+      <div id="auth-error" class="text-xs text-rose hidden"></div>
+      <button type="submit" id="auth-submit-btn" class="w-full py-2.5 rounded-lg bg-accent text-white font-medium text-sm hover:bg-accent-dark transition-colors">Войти</button>
+    </form>
+  </div>
+</div>
+
+<!-- Task Details Modal -->
+<div id="task-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 hidden">
+  <div class="bg-surface dark:bg-surface-dark border border-line dark:border-line-dark rounded-xl2 max-w-lg w-full p-4 sm:p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+    <div class="flex items-center justify-between border-b border-line dark:border-line-dark pb-3">
+      <h3 class="font-bold text-base sm:text-lg truncate pr-2" id="modal-task-title">Детали задачи</h3>
+      <button id="close-task-modal" class="p-1 text-muted hover:text-ink dark:hover:text-white text-xl">×</button>
+    </div>
+
+    <div>
+      <label class="block text-xs font-semibold text-muted dark:text-muted-dark mb-1">Заметка / Описание</label>
+      <textarea id="modal-task-note" rows="3" placeholder="Добавьте подробное описание..." class="w-full rounded-lg border border-line dark:border-line-dark bg-transparent p-2.5 text-sm ring-focus"></textarea>
+      <button id="save-note-btn" class="mt-2 text-xs px-3 py-1.5 rounded-lg bg-accent text-white font-medium">Сохранить заметку</button>
+    </div>
+
+    <div class="border-t border-line dark:border-line-dark pt-3">
+      <h4 class="text-xs font-semibold text-muted dark:text-muted-dark mb-2">Обсуждение и комментарии</h4>
+      <div id="modal-comments-list" class="space-y-2 max-h-36 overflow-y-auto mb-3"></div>
+      
+      <div class="flex gap-2">
+        <input type="text" id="modal-comment-input" placeholder="Напишите..." class="flex-1 rounded-lg border border-line dark:border-line-dark bg-transparent px-3 py-1.5 text-sm ring-focus">
+        <button id="add-comment-btn" class="px-3 sm:px-4 py-1.5 rounded-lg bg-accent text-white text-xs sm:text-sm font-medium whitespace-nowrap">Отправить</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="flex min-h-screen">
+
+  <!-- Sidebar (Desktop) -->
+  <aside class="hidden md:flex md:w-60 lg:w-64 flex-col shrink-0 border-r border-line dark:border-line-dark bg-surface/60 dark:bg-surface-dark/40 px-5 py-6">
+    <div class="flex items-center gap-2 px-1 mb-6">
+      <div class="w-8 h-8 rounded-lg bg-accent flex items-center justify-center">
+        <i data-lucide="compass" class="w-4.5 h-4.5 text-white" style="width:18px;height:18px"></i>
+      </div>
+      <span class="font-semibold text-[15px] tracking-tight">Компас дня</span>
+    </div>
+
+    <div class="mb-6 p-3 rounded-xl border border-line dark:border-line-dark bg-paper dark:bg-white/5 space-y-2">
+      <div class="flex items-center justify-between text-xs">
+        <span id="user-email-display" class="font-medium truncate max-w-[120px]">...</span>
+        <button id="logout-btn" class="text-rose hover:underline">Выйти</button>
+      </div>
+      <div class="text-[11px] text-muted dark:text-muted-dark flex items-center justify-between pt-1 border-t border-line dark:border-line-dark">
+        <span>Код пары:</span>
+        <button id="couple-code-btn" class="font-mono font-semibold text-accent hover:underline">Настроить</button>
+      </div>
+    </div>
+
+    <nav class="flex flex-col gap-1" id="sidebar-nav"></nav>
+
+    <div class="mt-auto pt-6 flex flex-col gap-2">
+      <button id="pwa-install-btn" class="hidden flex items-center gap-2 text-xs px-3 py-2 rounded-lg bg-accent text-white font-medium hover:bg-accent-dark transition-colors">
+        <i data-lucide="download" class="w-4 h-4"></i>
+        <span>Установить приложение</span>
+      </button>
+
+      <button id="notify-perm-btn" class="flex items-center gap-2 text-xs px-3 py-2 rounded-lg border border-line dark:border-line-dark hover:bg-paper dark:hover:bg-white/5 transition-colors">
+        <i data-lucide="bell" class="w-4 h-4 text-amber"></i>
+        <span id="notify-btn-label">Включить уведомления</span>
+      </button>
+
+      <button id="theme-toggle" class="flex items-center gap-2 text-xs px-3 py-2 rounded-lg border border-line dark:border-line-dark hover:bg-paper dark:hover:bg-white/5 transition-colors ring-focus">
+        <i data-lucide="moon" class="w-4 h-4" id="theme-icon"></i>
+        <span id="theme-label">Тёмная тема</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main Content Area -->
+  <div class="flex-1 flex flex-col min-w-0">
+
+    <!-- Mobile Top Header Bar -->
+    <header class="md:hidden flex items-center justify-between px-4 py-3 border-b border-line dark:border-line-dark bg-surface/80 dark:bg-surface-dark/80 sticky top-0 z-20 backdrop-blur">
+      <div class="flex items-center gap-2 min-w-0">
+        <div class="w-7 h-7 rounded-lg bg-accent flex items-center justify-center shrink-0">
+          <i data-lucide="compass" class="w-4 h-4 text-white"></i>
+        </div>
+        <span class="font-semibold text-sm truncate">Компас дня</span>
+      </div>
+      <div class="flex items-center gap-1.5 shrink-0">
+        <button id="notify-perm-btn-mobile" class="p-1.5 rounded-lg border border-line dark:border-line-dark text-amber ring-focus">
+          <i data-lucide="bell" class="w-4 h-4"></i>
+        </button>
+        <button id="mobile-couple-btn" class="px-2 py-1 text-xs border border-line dark:border-line-dark rounded-lg text-accent font-mono font-semibold">Пара</button>
+        <button id="theme-toggle-mobile" class="p-1.5 rounded-lg border border-line dark:border-line-dark ring-focus">
+          <i data-lucide="moon" class="w-4 h-4" id="theme-icon-mobile"></i>
+        </button>
+        <button id="logout-btn-mobile" class="p-1.5 rounded-lg border border-line dark:border-line-dark text-rose ring-focus">
+          <i data-lucide="log-out" class="w-4 h-4"></i>
+        </button>
+      </div>
+    </header>
+
+    <main class="flex-1 px-3 sm:px-6 lg:px-10 py-4 sm:py-8 pb-28 md:pb-10 max-w-5xl w-full mx-auto">
+
+      <!-- OVERVIEW TAB -->
+      <section id="panel-overview" class="tab-panel space-y-4 sm:space-y-6">
+        <div>
+          <h1 class="text-xl sm:text-2xl font-semibold tracking-tight" id="overview-date"></h1>
+          <p class="text-xs sm:text-sm text-muted dark:text-muted-dark mt-0.5">Всё, что происходит сегодня, в одном месте</p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+          <div class="rounded-xl2 border border-line dark:border-line-dark p-4 sm:p-5 bg-surface dark:bg-surface-dark">
+            <div class="flex items-center justify-between mb-2 sm:mb-3">
+              <span class="text-xs sm:text-sm text-muted dark:text-muted-dark">Задачи на сегодня</span>
+              <i data-lucide="check-circle-2" class="w-4 h-4 text-accent"></i>
+            </div>
+            <div class="flex items-end gap-2">
+              <span class="text-2xl sm:text-3xl font-semibold tabular-nums" id="ov-task-pct">0%</span>
+              <span class="text-xs sm:text-sm text-muted dark:text-muted-dark mb-0.5" id="ov-task-count">0 из 0</span>
+            </div>
+            <div class="w-full h-1.5 rounded-full bg-line dark:bg-line-dark mt-2.5 overflow-hidden">
+              <div id="ov-task-bar" class="h-full bg-accent transition-all duration-300" style="width:0%"></div>
+            </div>
+          </div>
+
+          <div class="rounded-xl2 border border-line dark:border-line-dark p-4 sm:p-5 bg-surface dark:bg-surface-dark">
+            <div class="flex items-center justify-between mb-2 sm:mb-3">
+              <span class="text-xs sm:text-sm text-muted dark:text-muted-dark">Привычки сегодня</span>
+              <i data-lucide="flame" class="w-4 h-4 text-amber"></i>
+            </div>
+            <div class="flex items-end gap-2">
+              <span class="text-2xl sm:text-3xl font-semibold tabular-nums" id="ov-habit-pct">0%</span>
+              <span class="text-xs sm:text-sm text-muted dark:text-muted-dark mb-0.5" id="ov-habit-count">0 из 0</span>
+            </div>
+            <div class="w-full h-1.5 rounded-full bg-line dark:bg-line-dark mt-2.5 overflow-hidden">
+              <div id="ov-habit-bar" class="h-full bg-amber transition-all duration-300" style="width:0%"></div>
+            </div>
+          </div>
+
+          <div class="rounded-xl2 border border-line dark:border-line-dark p-4 sm:p-5 bg-surface dark:bg-surface-dark">
+            <div class="flex items-center justify-between mb-2 sm:mb-3">
+              <span class="text-xs sm:text-sm text-muted dark:text-muted-dark">Траты сегодня</span>
+              <i data-lucide="wallet" class="w-4 h-4 text-rose"></i>
+            </div>
+            <div class="flex items-end gap-2">
+              <span class="text-2xl sm:text-3xl font-semibold tabular-nums" id="ov-spend-today">0 Kč</span>
+            </div>
+            <p class="text-xs sm:text-sm text-muted dark:text-muted-dark mt-2" id="ov-spend-note">Операций сегодня нет</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div class="rounded-xl2 border border-line dark:border-line-dark p-4 sm:p-5 bg-surface dark:bg-surface-dark">
+            <h3 class="text-sm font-medium mb-3">Чек-лист привычек</h3>
+            <div id="ov-habit-list" class="space-y-2"></div>
+          </div>
+          <div class="rounded-xl2 border border-line dark:border-line-dark p-4 sm:p-5 bg-surface dark:bg-surface-dark">
+            <h3 class="text-sm font-medium mb-3">Ближайшие задачи</h3>
+            <div id="ov-task-list" class="space-y-2"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SCHEDULE TAB -->
+      <section id="panel-schedule" class="tab-panel hidden space-y-4 sm:space-y-6">
+        <div class="flex flex-wrap items-center justify-between gap-3"></div>
+
+        <form id="task-form" class="rounded-xl2 border border-line dark:border-line-dark p-3.5 sm:p-5 bg-surface dark:bg-surface-dark space-y-3">
+          <input type="hidden" id="task-edit-id" value="">
+          
+          <div class="grid grid-cols-2 sm:grid-cols-6 gap-2.5 sm:gap-3">
+            <div class="col-span-2 sm:col-span-1">
+              <label class="block text-[11px] sm:text-xs text-muted dark:text-muted-dark mb-1">Дата</label>
+              <input required type="date" id="task-date" class="w-full rounded-lg border border-line dark:border-line-dark bg-transparent px-2.5 py-1.5 sm:py-2 text-xs sm:text-sm ring-focus">
+            </div>
+            <div class="col-span-1">
+              <label class="block text-[11px] sm:text-xs text-muted dark:text-muted-dark mb-1">Начало</label>
+              <input required type="time" id="task-start" class="w-full rounded-lg border border-line dark:border-line-dark bg-transparent px-2 py-1.5 sm:py-2 text-xs sm:text-sm ring-focus">
+            </div>
+            <div class="col-span-1">
+              <label class="block text-[11px] sm:text-xs text-muted dark:text-muted-dark mb-1">Конец</label>
+              <input required type="time" id="task-end" class="w-full rounded-lg border border-line dark:border-line-dark bg-transparent px-2 py-1.5 sm:py-2 text-xs sm:text-sm ring-focus">
+            </div>
+            <div class="col-span-2 sm:col-span-3">
+              <label class="block text-[11px] sm:text-xs text-muted dark:text-muted-dark mb-1">Описание задачи</label>
+              <input required type="text" id="task-desc" placeholder="Например: Встреча или созвон" class="w-full rounded-lg border border-line dark:border-line-dark bg-transparent px-2.5 py-1.5 sm:py-2 text-xs sm:text-sm ring-focus">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-6 gap-2.5 sm:gap-3 items-end">
+            <div>
+              <label class="block text-[11px] sm:text-xs text-muted dark:text-muted-dark mb-1">Приоритет</label>
+              <select id="task-priority" class="w-full rounded-lg border border-line dark:border-line-dark bg-transparent px-2 py-1.5 sm:py-2 text-xs sm:text-sm ring-focus">
+                <option value="Низкий">Низкий</option>
+                <option value="Средний" selected>Средний</option>
+                <option value="Высокий">Высокий</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[11px] sm:text-xs text-muted dark:text-muted-dark mb-1">Доступ</label>
+              <select id="task-shared" class="w-full rounded-lg border border-line dark:border-line-dark bg-transparent px-2 py-1.5 sm:py-2 text-xs sm:text-sm ring-focus">
+                <option value="private">🔒 Личная</option>
+                <option value="shared" selected>👥 Общая</option>
+              </select>
+            </div>
+            <div class="col-span-2 sm:col-span-2">
+              <label class="block text-[11px] sm:text-xs text-muted dark:text-muted-dark mb-1">Повторение</label>
+              <select id="task-repeat" class="w-full rounded-lg border border-line dark:border-line-dark bg-transparent px-2 py-1.5 sm:py-2 text-xs sm:text-sm ring-focus">
+                <option value="none">Не повторяется</option>
+                <option value="daily">Каждый день</option>
+                <option value="weekly">Раз в неделю</option>
+              </select>
+            </div>
+            <div class="col-span-2 flex items-end justify-end gap-2 pt-1 sm:pt-0">
+              <button type="button" id="copy-day-btn" class="w-1/2 rounded-lg border border-line dark:border-line-dark hover:bg-paper dark:hover:bg-white/5 text-[11px] sm:text-xs py-2 font-medium transition-colors ring-focus truncate">📋 Скопировать день</button>
+              <button type="submit" id="task-submit-btn" class="w-1/2 rounded-lg bg-accent hover:bg-accent-dark text-white text-[11px] sm:text-xs font-medium py-2 transition-colors ring-focus truncate">Добавить</button>
+            </div>
+          </div>
+        </form>
+
+        <div class="rounded-xl2 border border-line dark:border-line-dark bg-surface dark:bg-surface-dark overflow-hidden">
+          <div id="schedule-scroll" class="max-h-[550px] overflow-y-auto overscroll-contain"></div>
+        </div>
+
+        <div>
+          <h3 class="text-sm font-medium mb-2.5">Задачи этого дня</h3>
+          <div id="day-task-list" class="space-y-2"></div>
+        </div>
+      </section>
+
+      <!-- HABITS TAB -->
+      <section id="panel-habits" class="tab-panel hidden space-y-4 sm:space-y-6">
+        <div>
+          <h1 class="text-xl sm:text-2xl font-semibold tracking-tight">Трекер привычек</h1>
+          <p class="text-xs sm:text-sm text-muted dark:text-muted-dark mt-0.5">Недельный трекер привычек</p>
+        </div>
+
+        <form id="habit-form" class="rounded-xl2 border border-line dark:border-line-dark p-3.5 sm:p-5 bg-surface dark:bg-surface-dark flex flex-col sm:flex-row gap-2.5 sm:gap-3">
+          <input required type="text" id="habit-name" placeholder="Новая привычка..." class="flex-1 rounded-lg border border-line dark:border-line-dark bg-transparent px-3 py-2 text-xs sm:text-sm ring-focus">
+          <select id="habit-shared" class="rounded-lg border border-line dark:border-line-dark bg-transparent px-3 py-2 text-xs sm:text-sm ring-focus">
+            <option value="private">🔒 Личная</option>
+            <option value="shared" selected>👥 Общая</option>
+          </select>
+          <button type="submit" class="rounded-lg bg-accent hover:bg-accent-dark text-white text-xs sm:text-sm font-medium px-4 py-2 transition-colors ring-focus whitespace-nowrap">Добавить привычку</button>
+        </form>
+
+        <div id="habit-list" class="space-y-2.5 sm:space-y-3"></div>
+      </section>
+
+      <!-- FINANCE TAB WITH ANALYTICS CHART -->
+      <section id="panel-finance" class="tab-panel hidden space-y-4 sm:space-y-6">
+        <div>
+          <h1 class="text-xl sm:text-2xl font-semibold tracking-tight">Семейный бюджет</h1>
+          <p class="text-xs sm:text-sm text-muted dark:text-muted-dark mt-0.5">Доходы и расходы (личные и общие)</p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+          <div class="rounded-xl2 border border-line dark:border-line-dark p-4 sm:p-5 bg-surface dark:bg-surface-dark">
+            <span class="text-xs sm:text-sm text-muted dark:text-muted-dark">Доходы за месяц</span>
+            <div class="text-xl sm:text-2xl font-semibold tabular-nums text-leaf mt-1" id="fin-income">0 Kč</div>
+          </div>
+          <div class="rounded-xl2 border border-line dark:border-line-dark p-4 sm:p-5 bg-surface dark:bg-surface-dark">
+            <span class="text-xs sm:text-sm text-muted dark:text-muted-dark">Расходы за месяц</span>
+            <div class="text-xl sm:text-2xl font-semibold tabular-nums text-rose mt-1" id="fin-expense">0 Kč</div>
+          </div>
+          <div class="rounded-xl2 border border-line dark:border-line-dark p-4 sm:p-5 bg-surface dark:bg-surface-dark">
+            <span class="text-xs sm:text-sm text-muted dark:text-muted-dark">Чистый остаток</span>
+            <div class="text-xl sm:text-2xl font-semibold tabular-nums mt-1" id="fin-balance">0 Kč</div>
+          </div>
+        </div>
+
+        <!-- ANALYTICS CHARTS SECTION -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="rounded-xl2 border border-line dark:border-line-dark p-4 bg-surface dark:bg-surface-dark">
+            <h3 class="text-xs font-semibold text-muted dark:text-muted-dark mb-3">Расходы по категориям</h3>
+            <div class="relative h-48 flex items-center justify-center">
+              <canvas id="chart-categories"></canvas>
+            </div>
+          </div>
+          <div class="rounded-xl2 border border-line dark:border-line-dark p-4 bg-surface dark:bg-surface-dark">
+            <h3 class="text-xs font-semibold text-muted dark:text-muted-dark mb-3">Доходы vs Расходы</h3>
+            <div class="relative h-48 flex items-center justify-center">
+              <canvas id="chart-summary"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <form id="finance-form" class="rounded-xl2 border border-line dark:border-line-dark p-3.5 sm:p-5 bg-surface dark:bg-surface-dark grid grid-cols-2 sm:grid-cols-6 gap-2.5 sm:gap-3">
+          <div>
+            <label class="block text-[11px] sm:text-xs text-muted dark:text-muted-dark mb-1">Сумма (Kč)</label>
+            <input required type="number" min="0" step="0.01" id="fin-amount" placeholder="0" class="w-full rounded-lg border border-line dark:border-line-dark bg-transparent px-2.5 py-1.5 sm:py-2 text-xs sm:text-sm ring-focus">
+          </div>
+          <div>
+            <label class="block text-[11px] sm:text-xs text-muted dark:text-muted-dark mb-1">Тип</label>
+            <select id="fin-type" class="w-full rounded-lg border border-line dark:border-line-dark bg-transparent px-2 py-1.5 sm:py-2 text-xs sm:text-sm ring-focus">
+              <option value="expense">Расход</option>
+              <option value="income">Доход</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[11px] sm:text-xs text-muted dark:text-muted-dark mb-1">Категория</label>
+            <select id="fin-category" class="w-full rounded-lg border border-line dark:border-line-dark bg-transparent px-2 py-1.5 sm:py-2 text-xs sm:text-sm ring-focus"></select>
+          </div>
+          <div>
+            <label class="block text-[11px] sm:text-xs text-muted dark:text-muted-dark mb-1">Бюджет</label>
+            <select id="fin-shared" class="w-full rounded-lg border border-line dark:border-line-dark bg-transparent px-2 py-1.5 sm:py-2 text-xs sm:text-sm ring-focus">
+              <option value="shared" selected>👥 Семейный</option>
+              <option value="private">🔒 Личный</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[11px] sm:text-xs text-muted dark:text-muted-dark mb-1">Дата</label>
+            <input required type="date" id="fin-date" class="w-full rounded-lg border border-line dark:border-line-dark bg-transparent px-2 py-1.5 sm:py-2 text-xs sm:text-sm ring-focus">
+          </div>
+          <div class="flex items-end col-span-2 sm:col-span-1">
+            <button type="submit" class="w-full rounded-lg bg-accent hover:bg-accent-dark text-white text-xs sm:text-sm font-medium py-2 transition-colors ring-focus">Добавить</button>
+          </div>
+        </form>
+
+        <div>
+          <h3 class="text-sm font-medium mb-2.5">Последние операции</h3>
+          <div id="finance-list" class="space-y-2"></div>
+        </div>
+      </section>
+
+      <!-- PIGGY BANK TAB -->
+      <section id="panel-piggy" class="tab-panel hidden space-y-4 sm:space-y-6">
+        <div>
+          <h1 class="text-xl sm:text-2xl font-semibold tracking-tight">Копилка и Накопления 🎯</h1>
+          <p class="text-xs sm:text-sm text-muted dark:text-muted-dark mt-0.5">Финансовые цели и совместные накопления</p>
+        </div>
+
+        <form id="piggy-form" class="rounded-xl2 border border-line dark:border-line-dark p-3.5 sm:p-5 bg-surface dark:bg-surface-dark grid grid-cols-1 sm:grid-cols-5 gap-2.5 sm:gap-3">
+          <div class="sm:col-span-2">
+            <label class="block text-[11px] sm:text-xs text-muted dark:text-muted-dark mb-1">На что копим?</label>
+            <input required type="text" id="piggy-title" placeholder="Например: Отпуск у моря" class="w-full rounded-lg border border-line dark:border-line-dark bg-transparent px-3 py-2 text-xs sm:text-sm ring-focus">
+          </div>
+          <div>
+            <label class="block text-[11px] sm:text-xs text-muted dark:text-muted-dark mb-1">Целевая сумма (Kč)</label>
+            <input required type="number" min="1" id="piggy-target" placeholder="50000" class="w-full rounded-lg border border-line dark:border-line-dark bg-transparent px-3 py-2 text-xs sm:text-sm ring-focus">
+          </div>
+          <div>
+            <label class="block text-[11px] sm:text-xs text-muted dark:text-muted-dark mb-1">Доступ</label>
+            <select id="piggy-shared" class="w-full rounded-lg border border-line dark:border-line-dark bg-transparent px-2 py-2 text-xs sm:text-sm ring-focus">
+              <option value="shared" selected>👥 Совместно</option>
+              <option value="private">🔒 Лично</option>
+            </select>
+          </div>
+          <div class="flex items-end">
+            <button type="submit" class="w-full py-2 rounded-lg bg-accent text-white font-medium text-xs sm:text-sm hover:bg-accent-dark transition-colors">Создать цель</button>
+          </div>
+        </form>
+
+        <div id="piggy-list" class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4"></div>
+      </section>
+
+      <!-- SHOPPING TAB -->
+      <section id="panel-shopping" class="tab-panel hidden space-y-4 sm:space-y-6">
+        <div>
+          <h1 class="text-xl sm:text-2xl font-semibold tracking-tight">Список покупок</h1>
+          <p class="text-xs sm:text-sm text-muted dark:text-muted-dark mt-0.5">Общий список товаров в магазин</p>
+        </div>
+
+        <form id="shopping-form" class="rounded-xl2 border border-line dark:border-line-dark p-3.5 sm:p-5 bg-surface dark:bg-surface-dark flex gap-2">
+          <input required type="text" id="shop-title" placeholder="Что нужно купить?..." class="flex-1 rounded-lg border border-line dark:border-line-dark bg-transparent px-3 py-2 text-xs sm:text-sm ring-focus">
+          <button type="submit" class="rounded-lg bg-accent hover:bg-accent-dark text-white text-xs sm:text-sm font-medium px-4 py-2 transition-colors ring-focus whitespace-nowrap">Добавить</button>
+        </form>
+
+        <div id="shopping-list" class="space-y-2"></div>
+      </section>
+
+      <!-- WISHLIST TAB -->
+      <section id="panel-wishlist" class="tab-panel hidden space-y-4 sm:space-y-6">
+        <div>
+          <h1 class="text-xl sm:text-2xl font-semibold tracking-tight">Вишлист 🎁</h1>
+          <p class="text-xs sm:text-sm text-muted dark:text-muted-dark mt-0.5">Список желаний и подарков</p>
+        </div>
+
+        <form id="wishlist-form" class="rounded-xl2 border border-line dark:border-line-dark p-3.5 sm:p-5 bg-surface dark:bg-surface-dark grid grid-cols-1 sm:grid-cols-6 gap-2.5 sm:gap-3">
+          <div class="sm:col-span-2">
+            <label class="block text-[11px] sm:text-xs text-muted dark:text-muted-dark mb-1">Название желания</label>
+            <input required type="text" id="wish-title" placeholder="Например: Наушники" class="w-full rounded-lg border border-line dark:border-line-dark bg-transparent px-3 py-2 text-xs sm:text-sm ring-focus">
+          </div>
+          <div>
+            <label class="block text-[11px] sm:text-xs text-muted dark:text-muted-dark mb-1">Цена (Kč)</label>
+            <input type="number" min="0" id="wish-price" placeholder="0" class="w-full rounded-lg border border-line dark:border-line-dark bg-transparent px-3 py-2 text-xs sm:text-sm ring-focus">
+          </div>
+          <div class="sm:col-span-2">
+            <label class="block text-[11px] sm:text-xs text-muted dark:text-muted-dark mb-1">Ссылка на сайт</label>
+            <input type="url" id="wish-link" placeholder="https://..." class="w-full rounded-lg border border-line dark:border-line-dark bg-transparent px-3 py-2 text-xs sm:text-sm ring-focus">
+          </div>
+          <div>
+            <label class="block text-[11px] sm:text-xs text-muted dark:text-muted-dark mb-1">Видимость</label>
+            <select id="wish-shared" class="w-full rounded-lg border border-line dark:border-line-dark bg-transparent px-2 py-2 text-xs sm:text-sm ring-focus">
+              <option value="shared" selected>👥 Для двоих</option>
+              <option value="private">🔒 Личное</option>
+            </select>
+          </div>
+          <div class="sm:col-span-6 flex justify-end">
+            <button type="submit" class="w-full sm:w-auto px-6 py-2 rounded-lg bg-accent text-white font-medium text-xs sm:text-sm hover:bg-accent-dark transition-colors">Добавить в вишлист</button>
+          </div>
+        </form>
+
+        <div id="wishlist-list" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<!-- Mobile Bottom Fixed Navigation Bar -->
+<nav class="md:hidden fixed bottom-0 inset-x-0 z-30 bg-surface/95 dark:bg-surface-dark/95 backdrop-blur border-t border-line dark:border-line-dark grid grid-cols-7 px-0.5 py-1" id="mobile-nav"></nav>
+
+<!-- FIREBASE SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+/* ============================= FIREBASE CONFIG ============================= */
+const firebaseConfig = {
+  apiKey: "AIzaSyDrAFLtoWL_Ky59IIEnhmbmVY2LXABbKKs",
+  authDomain: "tmaa-a754a.firebaseapp.com",
+  projectId: "tmaa-a754a",
+  storageBucket: "tmaa-a754a.firebasestorage.app",
+  messagingSenderId: "426556110914",
+  appId: "1:426556110914:web:728e6ad07a25b9a6a4d5db"
+};
+
+firebase.initializeApp(firebaseConfig);
+var auth = firebase.auth();
+var db = firebase.firestore();
+
+/* ============================= STATE ============================= */
+const TABS = [
+  { id: 'overview', label: 'Обзор', icon: 'layout-dashboard' },
+  { id: 'schedule', label: 'Календарь', icon: 'calendar-clock' },
+  { id: 'habits', label: 'Привычки', icon: 'flame' },
+  { id: 'finance', label: 'Расходы', icon: 'wallet' },
+  { id: 'piggy', label: 'Копилка', icon: 'target' },
+  { id: 'shopping', label: 'Покупки', icon: 'shopping-cart' },
+  { id: 'wishlist', label: 'Вишлист', icon: 'gift' }
+];
+
+const CATEGORIES = ['Продукты', 'Кафе и Еда', 'Транспорт', 'Жильё', 'Развлечения', 'Здоровье', 'Зарплата', 'Прочее'];
+const PRIORITY_STYLES = {
+  'Низкий':  { dot: 'bg-leaf',  text: 'text-leaf',  bg: 'bg-leaf/10' },
+  'Средний': { dot: 'bg-amber', text: 'text-amber', bg: 'bg-amber/10' },
+  'Высокий': { dot: 'bg-rose',  text: 'text-rose',  bg: 'bg-rose/10' }
+};
+
+let currentUser = null;
+let coupleCode = localStorage.getItem('cd_couple_code') || '';
+let state = {
+  tasks: [],
+  habits: [],
+  finance: [],
+  piggy: [],
+  shopping: [],
+  wishlist: [],
+  activeTab: 'overview'
+};
+
+let chartCategoryInstance = null;
+let chartSummaryInstance = null;
+let notifiedTaskIds = new Set();
+
+/* ============================= FIREBASE SYNC ============================= */
+function initFirebaseListeners() {
+  if (!currentUser) return;
+  const userIds = getAccessUserIds();
+
+  db.collection('tasks').where('userId', 'in', userIds).onSnapshot(snapshot => {
+    state.tasks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    renderAll();
+    checkTaskNotifications();
+  }, err => console.error(err));
+
+  db.collection('habits').where('userId', 'in', userIds).onSnapshot(snapshot => {
+    state.habits = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    renderAll();
+  }, err => console.error(err));
+
+  db.collection('finance').where('userId', 'in', userIds).onSnapshot(snapshot => {
+    state.finance = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    renderAll();
+  }, err => console.error(err));
+
+  db.collection('piggy').where('userId', 'in', userIds).onSnapshot(snapshot => {
+    state.piggy = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    renderAll();
+  }, err => console.error(err));
+
+  db.collection('shopping').where('userId', 'in', userIds).onSnapshot(snapshot => {
+    state.shopping = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    renderAll();
+  }, err => console.error(err));
+
+  db.collection('wishlist').where('userId', 'in', userIds).onSnapshot(snapshot => {
+    state.wishlist = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    renderAll();
+  }, err => console.error(err));
+}
+
+function getAccessUserIds() {
+  const ids = [currentUser.uid];
+  if (coupleCode) ids.push(`couple_${coupleCode}`);
+  return ids;
+}
+
+/* ============================= PWA & NOTIFICATIONS ============================= */
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  const btn = document.getElementById('pwa-install-btn');
+  if (btn) btn.classList.remove('hidden');
+});
+
+document.getElementById('pwa-install-btn').onclick = async () => {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  const { outcome } = await deferredPrompt.userChoice;
+  if (outcome === 'accepted') {
+    document.getElementById('pwa-install-btn').classList.add('hidden');
+  }
+  deferredPrompt = null;
+};
+
+async function requestNotificationPermission() {
+  if (!("Notification" in window)) {
+    alert("Ваш браузер не поддерживает уведомления.");
+    return;
+  }
+  const perm = await Notification.requestPermission();
+  updateNotificationBtnState();
+  if (perm === 'granted') {
+    new Notification("Компас дня 🧭", { body: "Уведомления успешно включены!" });
+  }
+}
+
+function updateNotificationBtnState() {
+  const label = document.getElementById('notify-btn-label');
+  if (!("Notification" in window)) return;
+  if (Notification.permission === 'granted') {
+    if (label) label.textContent = 'Уведомления вкл. ✓';
+  } else if (Notification.permission === 'denied') {
+    if (label) label.textContent = 'Уведомления заблокированы';
+  }
+}
+
+document.getElementById('notify-perm-btn').onclick = requestNotificationPermission;
+document.getElementById('notify-perm-btn-mobile').onclick = requestNotificationPermission;
+
+function checkTaskNotifications() {
+  if (!("Notification" in window) || Notification.permission !== 'granted') return;
+
+  const now = new Date();
+  const todayS = todayStr();
+  const currentHM = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+
+  state.tasks.forEach(t => {
+    if (t.date === todayS && t.start === currentHM && !t.done && !notifiedTaskIds.has(t.id)) {
+      notifiedTaskIds.add(t.id);
+      new Notification("Напоминание о задаче ⏰", {
+        body: `${t.shared ? '👥' : '🔒'} ${t.desc} (в ${t.start})`,
+        icon: "https://cdn-icons-png.flaticon.com/512/854/854878.png"
+      });
+    }
+  });
+}
+
+setInterval(checkTaskNotifications, 30000);
+
+/* ============================= AUTH ============================= */
+let authMode = 'login';
+
+document.getElementById('auth-tab-login').onclick = () => setAuthMode('login');
+document.getElementById('auth-tab-register').onclick = () => setAuthMode('register');
+
+function setAuthMode(mode) {
+  authMode = mode;
+  document.getElementById('auth-tab-login').className = `flex-1 py-2 text-sm font-medium border-b-2 ${mode === 'login' ? 'border-accent text-accent' : 'border-transparent text-muted'}`;
+  document.getElementById('auth-tab-register').className = `flex-1 py-2 text-sm font-medium border-b-2 ${mode === 'register' ? 'border-accent text-accent' : 'border-transparent text-muted'}`;
+  document.getElementById('auth-submit-btn').textContent = mode === 'login' ? 'Войти' : 'Зарегистрироваться';
+}
+
+document.getElementById('auth-form').onsubmit = async (e) => {
+  e.preventDefault();
+  const email = document.getElementById('auth-email').value;
+  const password = document.getElementById('auth-password').value;
+  const errEl = document.getElementById('auth-error');
+  errEl.classList.add('hidden');
+
+  try {
+    if (authMode === 'login') {
+      await auth.signInWithEmailAndPassword(email, password);
+    } else {
+      await auth.createUserWithEmailAndPassword(email, password);
+    }
+  } catch (err) {
+    errEl.textContent = err.message;
+    errEl.classList.remove('hidden');
+  }
+};
+
+auth.onAuthStateChanged(user => {
+  if (user) {
+    currentUser = user;
+    document.getElementById('auth-modal').classList.add('hidden');
+    document.getElementById('user-email-display').textContent = user.email;
+    document.getElementById('couple-code-btn').textContent = coupleCode || 'Настроить';
+    initFirebaseListeners();
+  } else {
+    currentUser = null;
+    document.getElementById('auth-modal').classList.remove('hidden');
+  }
+});
+
+function setupCoupleCode() {
+  const code = prompt("Введите ваш общий семейный код (например: love2026):", coupleCode);
+  if (code !== null) {
+    coupleCode = code.trim().toLowerCase();
+    localStorage.setItem('cd_couple_code', coupleCode);
+    document.getElementById('couple-code-btn').textContent = coupleCode || 'Настроить';
+    initFirebaseListeners();
+  }
+}
+
+document.getElementById('logout-btn').onclick = () => auth.signOut();
+document.getElementById('logout-btn-mobile').onclick = () => auth.signOut();
+document.getElementById('couple-code-btn').onclick = setupCoupleCode;
+document.getElementById('mobile-couple-btn').onclick = setupCoupleCode;
+
+/* ============================= DATE & UTILS ============================= */
+function fmtDate(d) {
+  const y = d.getFullYear(), m = String(d.getMonth()+1).padStart(2,'0'), day = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+function todayStr() { return fmtDate(new Date()); }
+
+function money(n) {
+  const sign = n < 0 ? '−' : '';
+  return sign + Math.abs(n).toLocaleString('cs-CZ', { maximumFractionDigits: 2 }) + ' Kč';
+}
+
+function formatRuDate(d) {
+  return d.toLocaleDateString('ru-RU', { weekday: 'short', day: 'numeric', month: 'short' });
+}
+function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+let scheduleDate = todayStr();
+
+/* ============================= NAV ============================= */
+function renderNav() {
+  const sidebar = document.getElementById('sidebar-nav');
+  const mobile = document.getElementById('mobile-nav');
+  sidebar.innerHTML = '';
+  mobile.innerHTML = '';
+  TABS.forEach(tab => {
+    const active = state.activeTab === tab.id;
+    
+    const btn = document.createElement('button');
+    btn.className = `flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-left transition-colors ring-focus ${active ? 'bg-accent/10 text-accent font-medium' : 'text-ink/70 dark:text-white/70 hover:bg-paper dark:hover:bg-white/5'}`;
+    btn.innerHTML = `<i data-lucide="${tab.icon}" class="w-4 h-4"></i><span>${tab.label}</span>`;
+    btn.onclick = () => setTab(tab.id);
+    sidebar.appendChild(btn);
+
+    const mbtn = document.createElement('button');
+    mbtn.className = `flex flex-col items-center justify-center gap-0.5 py-1 text-[8.5px] leading-tight ring-focus ${active ? 'text-accent font-semibold' : 'text-muted dark:text-muted-dark'}`;
+    mbtn.innerHTML = `<i data-lucide="${tab.icon}" class="w-3.5 h-3.5"></i><span class="truncate w-full text-center">${tab.label}</span>`;
+    mbtn.onclick = () => setTab(tab.id);
+    mobile.appendChild(mbtn);
+  });
+  lucide.createIcons();
+}
+
+function setTab(id) {
+  state.activeTab = id;
+  TABS.forEach(t => document.getElementById('panel-' + t.id).classList.toggle('hidden', t.id !== id));
+  renderNav();
+  renderAll();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ============================= SCHEDULE ============================= */
+const ROW_HEIGHT = 48;
+let scheduleViewMode = 'month';
+let currentMonthDate = new Date();
+let currentEditingTaskId = null;
+
+function taskOccursOnDate(t, dateStr) {
+  if (dateStr < t.date) return false;
+  if (t.repeat === 'daily') return true;
+  if (t.repeat === 'weekly') {
+    const d1 = new Date(t.date + 'T00:00:00');
+    const d2 = new Date(dateStr + 'T00:00:00');
+    return d1.getDay() === d2.getDay();
+  }
+  return t.date === dateStr;
+}
+
+document.getElementById('task-form').onsubmit = async (e) => {
+  e.preventDefault();
+  const editId = document.getElementById('task-edit-id').value;
+  const isShared = document.getElementById('task-shared').value === 'shared';
+  
+  const payload = {
+    userId: isShared ? `couple_${coupleCode}` : currentUser.uid,
+    date: document.getElementById('task-date').value || scheduleDate,
+    start: document.getElementById('task-start').value || '09:00',
+    end: document.getElementById('task-end').value || '10:00',
+    desc: document.getElementById('task-desc').value.trim(),
+    priority: document.getElementById('task-priority').value,
+    repeat: document.getElementById('task-repeat').value || 'none',
+    shared: isShared
+  };
+
+  if (editId) {
+    await db.collection('tasks').doc(editId).update(payload);
+    document.getElementById('task-edit-id').value = '';
+    document.getElementById('task-submit-btn').textContent = 'Добавить';
+  } else {
+    payload.createdById = currentUser.uid;
+    payload.done = false;
+    payload.note = '';
+    payload.comments = [];
+    await db.collection('tasks').add(payload);
+  }
+
+  document.getElementById('task-form').reset();
+  document.getElementById('task-date').value = scheduleDate;
+};
+
+function editTask(id) {
+  const t = state.tasks.find(x => x.id === id);
+  if (!t) return;
+  document.getElementById('task-edit-id').value = t.id;
+  document.getElementById('task-date').value = t.date;
+  document.getElementById('task-start').value = t.start;
+  document.getElementById('task-end').value = t.end;
+  document.getElementById('task-desc').value = t.desc;
+  document.getElementById('task-priority').value = t.priority;
+  document.getElementById('task-repeat').value = t.repeat || 'none';
+  document.getElementById('task-shared').value = t.shared ? 'shared' : 'private';
+  document.getElementById('task-submit-btn').textContent = 'Сохранить';
+  document.getElementById('task-form').scrollIntoView({ behavior: 'smooth' });
+}
+
+async function copyTaskToNextDay(id) {
+  const t = state.tasks.find(x => x.id === id);
+  if (!t) return;
+  const d = new Date(scheduleDate + 'T00:00:00');
+  d.setDate(d.getDate() + 1);
+  const nextDate = fmtDate(d);
+
+  const clone = { ...t, date: nextDate, createdById: currentUser.uid, done: false, repeat: 'none' };
+  delete clone.id;
+  await db.collection('tasks').add(clone);
+}
+
+document.getElementById('copy-day-btn').onclick = async () => {
+  const currentTasks = state.tasks.filter(t => taskOccursOnDate(t, scheduleDate) && t.repeat === 'none');
+  if (!currentTasks.length) {
+    alert('На этот день нет разовых задач.');
+    return;
+  }
+  const d = new Date(scheduleDate + 'T00:00:00');
+  d.setDate(d.getDate() + 1);
+  const nextDate = fmtDate(d);
+
+  for (const t of currentTasks) {
+    const clone = { ...t, date: nextDate, createdById: currentUser.uid, done: false };
+    delete clone.id;
+    await db.collection('tasks').add(clone);
+  }
+};
+
+function openTaskDetails(id) {
+  currentEditingTaskId = id;
+  const t = state.tasks.find(x => x.id === id);
+  if (!t) return;
+
+  document.getElementById('modal-task-title').textContent = `${t.shared ? '👥' : '🔒'} ${t.desc}`;
+  document.getElementById('modal-task-note').value = t.note || '';
+  renderCommentsList(t.comments || []);
+  document.getElementById('task-modal').classList.remove('hidden');
+}
+
+function renderCommentsList(comments) {
+  const list = document.getElementById('modal-comments-list');
+  list.innerHTML = '';
+  if (!comments.length) {
+    list.innerHTML = '<p class="text-xs text-muted">Комментариев пока нет</p>';
+    return;
+  }
+  comments.forEach(c => {
+    const item = document.createElement('div');
+    item.className = 'p-2 rounded-lg bg-paper dark:bg-white/5 text-xs';
+    item.innerHTML = `
+      <div class="flex justify-between text-[10px] text-muted mb-0.5">
+        <span class="font-bold text-accent">${c.author}</span>
+        <span>${c.time}</span>
+      </div>
+      <p class="text-ink dark:text-[#EDEDEC]">${c.text}</p>
+    `;
+    list.appendChild(item);
+  });
+}
+
+document.getElementById('save-note-btn').onclick = async () => {
+  if (!currentEditingTaskId) return;
+  const noteText = document.getElementById('modal-task-note').value.trim();
+  await db.collection('tasks').doc(currentEditingTaskId).update({ note: noteText });
+  alert('Заметка сохранена!');
+};
+
+document.getElementById('add-comment-btn').onclick = async () => {
+  if (!currentEditingTaskId) return;
+  const input = document.getElementById('modal-comment-input');
+  const text = input.value.trim();
+  if (!text) return;
+
+  const t = state.tasks.find(x => x.id === currentEditingTaskId);
+  const comments = t.comments || [];
+  
+  comments.push({
+    author: currentUser.email.split('@')[0],
+    text: text,
+    time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  });
+
+  await db.collection('tasks').doc(currentEditingTaskId).update({ comments });
+  input.value = '';
+  renderCommentsList(comments);
+};
+
+document.getElementById('close-task-modal').onclick = () => {
+  document.getElementById('task-modal').classList.add('hidden');
+};
+
+async function toggleTaskDone(id, currentDone) {
+  await db.collection('tasks').doc(id).update({ done: !currentDone });
+}
+
+async function deleteTask(id) {
+  await db.collection('tasks').doc(id).delete();
+}
+
+function renderSchedule() {
+  const container = document.getElementById('panel-schedule');
+  if (!container) return;
+
+  const headerWrapper = container.querySelector('.flex.flex-wrap');
+  if (headerWrapper) {
+    headerWrapper.innerHTML = `
+      <div>
+        <h1 class="text-xl sm:text-2xl font-semibold tracking-tight">Календарь</h1>
+        <p class="text-xs sm:text-sm text-muted dark:text-muted-dark mt-0.5">Планирование на месяц и по дням</p>
+      </div>
+      <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+        <div class="flex border border-line dark:border-line-dark rounded-lg overflow-hidden p-0.5 bg-paper dark:bg-white/5">
+          <button id="view-mode-month" class="px-2.5 py-1 text-xs font-medium rounded-md ${scheduleViewMode === 'month' ? 'bg-accent text-white' : 'text-muted'}">Месяц</button>
+          <button id="view-mode-day" class="px-2.5 py-1 text-xs font-medium rounded-md ${scheduleViewMode === 'day' ? 'bg-accent text-white' : 'text-muted'}">День</button>
+        </div>
+        <button id="sched-prev" class="p-1.5 rounded-lg border border-line dark:border-line-dark"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+        <span class="text-xs sm:text-sm font-semibold min-w-[90px] sm:min-w-[110px] text-center" id="calendar-title"></span>
+        <button id="sched-next" class="p-1.5 rounded-lg border border-line dark:border-line-dark"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+        <button id="sched-today" class="text-xs sm:text-sm px-2.5 py-1.5 rounded-lg border border-line dark:border-line-dark">Сегодня</button>
+      </div>
+    `;
+
+    document.getElementById('view-mode-month').onclick = () => { scheduleViewMode = 'month'; renderSchedule(); };
+    document.getElementById('view-mode-day').onclick = () => { scheduleViewMode = 'day'; renderSchedule(); };
+    
+    document.getElementById('sched-prev').onclick = () => {
+      if (scheduleViewMode === 'month') currentMonthDate.setMonth(currentMonthDate.getMonth() - 1);
+      else { const d = new Date(scheduleDate); d.setDate(d.getDate() - 1); scheduleDate = fmtDate(d); }
+      renderSchedule();
+    };
+    document.getElementById('sched-next').onclick = () => {
+      if (scheduleViewMode === 'month') currentMonthDate.setMonth(currentMonthDate.getMonth() + 1);
+      else { const d = new Date(scheduleDate); d.setDate(d.getDate() + 1); scheduleDate = fmtDate(d); }
+      renderSchedule();
+    };
+    document.getElementById('sched-today').onclick = () => {
+      currentMonthDate = new Date();
+      scheduleDate = todayStr();
+      renderSchedule();
+    };
+  }
+
+  const scrollWrap = document.getElementById('schedule-scroll');
+  if (scheduleViewMode === 'month') renderMonthView(scrollWrap);
+  else renderDayView(scrollWrap);
+  lucide.createIcons();
+}
+
+function renderMonthView(wrap) {
+  const year = currentMonthDate.getFullYear();
+  const month = currentMonthDate.getMonth();
+  const monthNames = ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"];
+  document.getElementById('calendar-title').textContent = `${monthNames[month]} ${year}`;
+
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+  let startDayOfWeek = (firstDay.getDay() + 6) % 7; 
+  const totalDays = lastDay.getDate();
+
+  let html = `
+    <div class="grid grid-cols-7 border-b border-line dark:border-line-dark text-center text-[11px] sm:text-xs font-semibold py-1.5 bg-paper dark:bg-white/5">
+      <div>Пн</div><div>Вт</div><div>Ср</div><div>Чт</div><div>Пт</div><div class="text-rose">Сб</div><div class="text-rose">Вс</div>
+    </div>
+    <div class="grid grid-cols-7 auto-rows-fr bg-line dark:bg-line-dark gap-[1px]">
+  `;
+
+  for (let i = 0; i < startDayOfWeek; i++) {
+    html += `<div class="bg-surface dark:bg-surface-dark min-h-[65px] sm:min-h-[90px] p-1 opacity-30"></div>`;
+  }
+
+  const today = todayStr();
+  for (let day = 1; day <= totalDays; day++) {
+    const dStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const dayTasks = state.tasks.filter(t => taskOccursOnDate(t, dStr));
+    const isToday = dStr === today;
+
+    html += `
+      <div class="month-day-cell bg-surface dark:bg-surface-dark min-h-[65px] sm:min-h-[90px] p-1 flex flex-col justify-start cursor-pointer hover:bg-paper dark:hover:bg-white/5 transition-colors" data-date="${dStr}">
+        <div class="flex items-center justify-between mb-0.5 sm:mb-1">
+          <span class="text-[11px] sm:text-xs font-semibold rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center ${isToday ? 'bg-accent text-white' : ''}">${day}</span>
+          ${dayTasks.length ? `<span class="text-[9px] sm:text-[10px] text-muted">${dayTasks.length}</span>` : ''}
+        </div>
+        <div class="space-y-0.5 sm:space-y-1 overflow-y-auto max-h-[50px] sm:max-h-[70px]">
+          ${dayTasks.map(t => {
+            const p = PRIORITY_STYLES[t.priority] || PRIORITY_STYLES['Средний'];
+            return `
+              <div class="text-[9px] sm:text-[10px] px-1 py-0.5 rounded truncate font-medium ${p.bg}${p.text} ${t.done ? 'strike' : ''}" title="${t.desc}">
+                ${t.shared ? '👥' : '🔒'} ${t.desc}
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  html += `</div>`;
+  wrap.innerHTML = html;
+
+  wrap.querySelectorAll('.month-day-cell').forEach(cell => {
+    cell.onclick = () => {
+      const date = cell.dataset.date;
+      scheduleDate = date;
+      if (document.getElementById('task-date')) {
+        document.getElementById('task-date').value = date;
+      }
+      scheduleViewMode = 'day';
+      renderSchedule();
+    };
+  });
+
+  renderDayTaskList(state.tasks.filter(t => taskOccursOnDate(t, scheduleDate)));
+}
+
+function renderDayView(wrap) {
+  document.getElementById('calendar-title').textContent = scheduleDate;
+  
+  wrap.innerHTML = `
+    <div class="flex">
+      <div id="schedule-hours" class="w-12 sm:w-16 shrink-0 border-r border-line dark:border-line-dark"></div>
+      <div id="schedule-track" class="flex-1 relative cursor-cell min-h-[550px]"></div>
+    </div>
+  `;
+
+  const track = document.getElementById('schedule-track');
+  const hoursEl = document.getElementById('schedule-hours');
+
+  for (let h = 0; h < 24; h++) {
+    const hCell = document.createElement('div');
+    hCell.className = 'relative border-b border-line dark:border-line-dark text-[10px] sm:text-[11px] text-muted dark:text-muted-dark';
+    hCell.style.height = ROW_HEIGHT + 'px';
+    hCell.innerHTML = `<span class="absolute -top-2 right-1 sm:right-2">${String(h).padStart(2,'0')}:00</span>`;
+    hoursEl.appendChild(hCell);
+
+    const line = document.createElement('div');
+    line.className = 'absolute left-0 right-0 border-b border-line dark:border-line-dark';
+    line.style.top = (h * ROW_HEIGHT) + 'px';
+    line.style.height = ROW_HEIGHT + 'px';
+    track.appendChild(line);
+  }
+
+  const dayTasks = state.tasks.filter(t => taskOccursOnDate(t, scheduleDate));
+  dayTasks.forEach(t => {
+    const [sh, sm] = (t.start || '09:00').split(':').map(Number);
+    const [eh, em] = (t.end || '10:00').split(':').map(Number);
+    const top = ((sh * 60 + sm) / 60) * ROW_HEIGHT;
+    const height = Math.max((((eh * 60 + em) - (sh * 60 + sm)) / 60) * ROW_HEIGHT, 24);
+    const p = PRIORITY_STYLES[t.priority] || PRIORITY_STYLES['Средний'];
+
+    const block = document.createElement('div');
+    block.className = `absolute left-1 right-1 sm:left-2 sm:right-2 rounded-lg border-l-4 px-1.5 py-1 flex items-center justify-between text-xs ${p.bg} ${p.text} ${t.done ? 'opacity-50' : ''}`;
+    block.style.top = top + 'px';
+    block.style.height = height + 'px';
+    block.innerHTML = `
+      <div class="flex items-center gap-1.5 truncate cursor-pointer" onclick="openTaskDetails('${t.id}')">
+        <button class="t-check w-3.5 h-3.5 sm:w-4 sm:h-4 rounded border border-current flex items-center justify-center shrink-0">
+          ${t.done ? '✓' : ''}
+        </button>
+        <span class="font-mono text-[9px] sm:text-[10px]">${t.start}</span>
+        <span class="truncate ${t.done ? 'strike' : ''}">${t.shared ? '👥' : '🔒'} ${t.desc}</span>
+      </div>
+      <div class="flex items-center gap-0.5 sm:gap-1">
+        <button class="t-copy hover:text-accent p-0.5" title="Скопировать">📋</button>
+        <button class="t-edit hover:text-accent p-0.5">✏️</button>
+        <button class="t-del hover:text-rose p-0.5">×</button>
+      </div>
+    `;
+    block.querySelector('.t-check').onclick = (e) => { e.stopPropagation(); toggleTaskDone(t.id, t.done); };
+    block.querySelector('.t-copy').onclick = (e) => { e.stopPropagation(); copyTaskToNextDay(t.id); };
+    block.querySelector('.t-edit').onclick = (e) => { e.stopPropagation(); editTask(t.id); };
+    block.querySelector('.t-del').onclick = (e) => { e.stopPropagation(); deleteTask(t.id); };
+    track.appendChild(block);
+  });
+
+  renderDayTaskList(dayTasks);
+}
+
+function renderDayTaskList(tasks) {
+  const list = document.getElementById('day-task-list');
+  if (!list) return;
+  list.innerHTML = '';
+  if (!tasks.length) {
+    list.innerHTML = '<p class="text-xs sm:text-sm text-muted">Задач на выбранный день нет.</p>';
+    return;
+  }
+  tasks.forEach(t => {
+    const row = document.createElement('div');
+    row.className = 'flex items-center justify-between p-2.5 sm:p-3 rounded-xl border border-line dark:border-line-dark bg-surface dark:bg-surface-dark text-xs sm:text-sm';
+    row.innerHTML = `
+      <div class="flex items-center gap-2 sm:gap-3 cursor-pointer min-w-0 pr-2" onclick="openTaskDetails('${t.id}')">
+        <button class="t-check w-4 h-4 sm:w-5 sm:h-5 rounded-full border border-accent flex items-center justify-center shrink-0">
+          ${t.done ? '✓' : ''}
+        </button>
+        <span class="font-mono text-[11px] sm:text-xs text-muted shrink-0">${t.start}</span>
+        <span class="truncate ${t.done ? 'strike' : ''}">${t.shared ? '👥' : '🔒'} ${t.desc}</span>
+        ${t.repeat !== 'none' ? '<span class="text-[9px] px-1 bg-accent/10 text-accent rounded shrink-0">🔁</span>' : ''}
+        ${t.comments && t.comments.length ? '<span class="text-[10px] shrink-0">💬</span>' : ''}
+      </div>
+      <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+        <button class="t-copy text-muted hover:text-accent p-1" title="Скопировать">📋</button>
+        <button class="t-edit text-accent p-1">✏️</button>
+        <button class="t-del text-rose p-1">×</button>
+      </div>
+    `;
+    row.querySelector('.t-check').onclick = (e) => { e.stopPropagation(); toggleTaskDone(t.id, t.done); };
+    row.querySelector('.t-copy').onclick = (e) => { e.stopPropagation(); copyTaskToNextDay(t.id); };
+    row.querySelector('.t-edit').onclick = (e) => { e.stopPropagation(); editTask(t.id); };
+    row.querySelector('.t-del').onclick = (e) => { e.stopPropagation(); deleteTask(t.id); };
+    list.appendChild(row);
+  });
+}
+
+/* ============================= HABITS ============================= */
+document.getElementById('habit-form').onsubmit = async (e) => {
+  e.preventDefault();
+  const isShared = document.getElementById('habit-shared').value === 'shared';
+  await db.collection('habits').add({
+    userId: isShared ? `couple_${coupleCode}` : currentUser.uid,
+    name: document.getElementById('habit-name').value.trim(),
+    shared: isShared,
+    completions: {}
+  });
+  document.getElementById('habit-form').reset();
+};
+
+async function toggleHabit(id, currentCompletions, dateStr) {
+  const updated = { ...currentCompletions };
+  if (updated[dateStr]) delete updated[dateStr];
+  else updated[dateStr] = true;
+  await db.collection('habits').doc(id).update({ completions: updated });
+}
+
+function renderHabits() {
+  const container = document.getElementById('habit-list');
+  if (!container) return;
+  container.innerHTML = '';
+  const todayS = todayStr();
+
+  state.habits.forEach(h => {
+    const checked = !!(h.completions && h.completions[todayS]);
+    const card = document.createElement('div');
+    card.className = 'flex items-center justify-between p-3.5 sm:p-4 rounded-xl2 border border-line dark:border-line-dark bg-surface dark:bg-surface-dark';
+    card.innerHTML = `
+      <div class="flex items-center gap-2.5 sm:gap-3">
+        <button class="h-check w-5 h-5 sm:w-6 sm:h-6 rounded-lg border border-accent flex items-center justify-center ${checked ? 'bg-accent text-white' : ''}">
+          ${checked ? '✓' : ''}
+        </button>
+        <span class="font-medium text-xs sm:text-sm ${checked ? 'strike' : ''}">${h.shared ? '👥' : '🔒'} ${h.name}</span>
+      </div>
+      <button class="h-del text-rose text-xs p-1">Удалить</button>
+    `;
+    card.querySelector('.h-check').onclick = () => toggleHabit(h.id, h.completions || {}, todayS);
+    card.querySelector('.h-del').onclick = () => db.collection('habits').doc(h.id).delete();
+    container.appendChild(card);
+  });
+}
+
+/* ============================= FINANCE & CHARTS ============================= */
+function populateCategories() {
+  const sel = document.getElementById('fin-category');
+  if (sel) sel.innerHTML = CATEGORIES.map(c => `<option value="${c}">${c}</option>`).join('');
+}
+
+document.getElementById('finance-form').onsubmit = async (e) => {
+  e.preventDefault();
+  const amount = parseFloat(document.getElementById('fin-amount').value);
+  const isShared = document.getElementById('fin-shared').value === 'shared';
+  await db.collection('finance').add({
+    userId: isShared ? `couple_${coupleCode}` : currentUser.uid,
+    amount,
+    type: document.getElementById('fin-type').value,
+    category: document.getElementById('fin-category').value,
+    shared: isShared,
+    date: document.getElementById('fin-date').value || todayStr()
+  });
+  document.getElementById('finance-form').reset();
+  document.getElementById('fin-date').value = todayStr();
+};
+
+function renderFinance() {
+  let income = 0, expense = 0;
+  const list = document.getElementById('finance-list');
+  if (!list) return;
+  list.innerHTML = '';
+
+  const catTotals = {};
+
+  state.finance.forEach(t => {
+    if (t.type === 'income') {
+      income += t.amount;
+    } else {
+      expense += t.amount;
+      catTotals[t.category] = (catTotals[t.category] || 0) + t.amount;
+    }
+
+    const row = document.createElement('div');
+    row.className = 'flex items-center justify-between p-2.5 sm:p-3 rounded-xl border border-line dark:border-line-dark bg-surface dark:bg-surface-dark text-xs sm:text-sm';
+    row.innerHTML = `
+      <div class="flex items-center gap-2 sm:gap-3">
+        <span class="text-xs px-1.5 py-0.5 rounded ${t.type === 'income' ? 'bg-leaf/10 text-leaf' : 'bg-rose/10 text-rose'}">${t.type === 'income' ? '+' : '-'}</span>
+        <div>
+          <p class="font-medium text-xs">${t.shared ? '👥' : '🔒'} ${t.category}</p>
+          <p class="text-[10px] text-muted">${t.date}</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 sm:gap-3">
+        <span class="font-semibold tabular-nums ${t.type === 'income' ? 'text-leaf' : 'text-rose'}">${money(t.amount)}</span>
+        <button class="f-del text-xs text-rose p-1">×</button>
+      </div>
+    `;
+    row.querySelector('.f-del').onclick = () => db.collection('finance').doc(t.id).delete();
+    list.appendChild(row);
+  });
+
+  document.getElementById('fin-income').textContent = money(income);
+  document.getElementById('fin-expense').textContent = money(expense);
+  document.getElementById('fin-balance').textContent = money(income - expense);
+
+  renderFinanceCharts(catTotals, income, expense);
+}
+
+function renderFinanceCharts(catTotals, totalIncome, totalExpense) {
+  const catCanvas = document.getElementById('chart-categories');
+  const sumCanvas = document.getElementById('chart-summary');
+
+  if (!catCanvas || !sumCanvas) return;
+
+  if (chartCategoryInstance) chartCategoryInstance.destroy();
+  if (chartSummaryInstance) chartSummaryInstance.destroy();
+
+  const labels = Object.keys(catTotals);
+  const data = Object.values(catTotals);
+
+  chartCategoryInstance = new Chart(catCanvas, {
+    type: 'doughnut',
+    data: {
+      labels: labels.length ? labels : ['Нет трат'],
+      datasets: [{
+        data: data.length ? data : [1],
+        backgroundColor: ['#0E7C73', '#C2483B', '#B8791A', '#3E7D4C', '#8E44AD', '#3498DB', '#E67E22', '#7F8C8D']
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } } }
+    }
+  });
+
+  chartSummaryInstance = new Chart(sumCanvas, {
+    type: 'bar',
+    data: {
+      labels: ['Доходы', 'Расходы'],
+      datasets: [{
+        data: [totalIncome, totalExpense],
+        backgroundColor: ['#3E7D4C', '#C2483B']
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } }
+    }
+  });
+}
+
+/* ============================= PIGGY BANK ============================= */
+document.getElementById('piggy-form').onsubmit = async (e) => {
+  e.preventDefault();
+  const isShared = document.getElementById('piggy-shared').value === 'shared';
+  const target = parseFloat(document.getElementById('piggy-target').value) || 0;
+
+  await db.collection('piggy').add({
+    userId: isShared ? `couple_${coupleCode}` : currentUser.uid,
+    title: document.getElementById('piggy-title').value.trim(),
+    target: target,
+    current: 0,
+    shared: isShared
+  });
+
+  document.getElementById('piggy-form').reset();
+};
+
+async function updatePiggyAmount(id, currentAmount) {
+  const addStr = prompt("Сколько денег добавить (или вычесть) в копилку? (например: 1000 или -500):");
+  if (!addStr) return;
+  const val = parseFloat(addStr);
+  if (isNaN(val)) return;
+
+  const newTotal = Math.max(0, currentAmount + val);
+  await db.collection('piggy').doc(id).update({ current: newTotal });
+}
+
+function renderPiggy() {
+  const container = document.getElementById('piggy-list');
+  if (!container) return;
+  container.innerHTML = '';
+
+  if (!state.piggy.length) {
+    container.innerHTML = '<p class="text-xs sm:text-sm text-muted col-span-2">Копилок пока нет. Создайте первую цель!</p>';
+    return;
+  }
+
+  state.piggy.forEach(p => {
+    const pct = p.target ? Math.min(100, Math.round((p.current / p.target) * 100)) : 0;
+    const card = document.createElement('div');
+    card.className = 'p-4 rounded-xl2 border border-line dark:border-line-dark bg-surface dark:bg-surface-dark space-y-3';
+    
+    card.innerHTML = `
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-semibold ${p.shared ? 'text-accent' : 'text-muted'}">${p.shared ? '👥 Совместная' : '🔒 Личная'}</span>
+        <button class="p-del text-xs text-rose hover:underline">Удалить</button>
+      </div>
+
+      <div>
+        <h4 class="font-bold text-base sm:text-lg">${p.title}</h4>
+        <div class="flex items-end justify-between mt-1">
+          <span class="text-xl sm:text-2xl font-bold text-accent tabular-nums">${money(p.current)}</span>
+          <span class="text-xs text-muted tabular-nums">из ${money(p.target)}</span>
+        </div>
+      </div>
+
+      <div>
+        <div class="flex justify-between text-xs mb-1">
+          <span class="text-muted">Прогресс</span>
+          <span class="font-bold text-accent">${pct}%</span>
+        </div>
+        <div class="w-full h-2 rounded-full bg-line dark:bg-line-dark overflow-hidden">
+          <div class="h-full bg-accent transition-all duration-300" style="width: ${pct}%"></div>
+        </div>
+      </div>
+
+      <button class="p-add w-full py-2 rounded-lg border border-line dark:border-line-dark hover:bg-paper dark:hover:bg-white/5 text-xs font-semibold text-accent transition-colors">
+        🪙 Пополнить / Снять
+      </button>
+    `;
+
+    card.querySelector('.p-add').onclick = () => updatePiggyAmount(p.id, p.current || 0);
+    card.querySelector('.p-del').onclick = () => db.collection('piggy').doc(p.id).delete();
+    container.appendChild(card);
+  });
+}
+
+/* ============================= SHOPPING ============================= */
+document.getElementById('shopping-form').onsubmit = async (e) => {
+  e.preventDefault();
+  await db.collection('shopping').add({
+    userId: `couple_${coupleCode}`,
+    title: document.getElementById('shop-title').value.trim(),
+    done: false
+  });
+  document.getElementById('shopping-form').reset();
+};
+
+function renderShopping() {
+  const list = document.getElementById('shopping-list');
+  if (!list) return;
+  list.innerHTML = '';
+  state.shopping.forEach(item => {
+    const row = document.createElement('div');
+    row.className = 'flex items-center justify-between p-2.5 sm:p-3 rounded-xl border border-line dark:border-line-dark bg-surface dark:bg-surface-dark text-xs sm:text-sm';
+    row.innerHTML = `
+      <div class="flex items-center gap-2.5 sm:gap-3">
+        <button class="s-check w-4 h-4 sm:w-5 sm:h-5 rounded border border-accent flex items-center justify-center">
+          ${item.done ? '✓' : ''}
+        </button>
+        <span class="${item.done ? 'strike' : ''}">${item.title}</span>
+      </div>
+      <button class="s-del text-rose p-1">Удалить</button>
+    `;
+    row.querySelector('.s-check').onclick = () => db.collection('shopping').doc(item.id).update({ done: !item.done });
+    row.querySelector('.s-del').onclick = () => db.collection('shopping').doc(item.id).delete();
+    list.appendChild(row);
+  });
+}
+
+/* ============================= WISHLIST ============================= */
+document.getElementById('wishlist-form').onsubmit = async (e) => {
+  e.preventDefault();
+  const isShared = document.getElementById('wish-shared').value === 'shared';
+  const price = parseFloat(document.getElementById('wish-price').value) || 0;
+  
+  await db.collection('wishlist').add({
+    userId: isShared ? `couple_${coupleCode}` : currentUser.uid,
+    title: document.getElementById('wish-title').value.trim(),
+    price: price,
+    link: document.getElementById('wish-link').value.trim(),
+    shared: isShared,
+    createdById: currentUser.uid,
+    reservedBy: null
+  });
+
+  document.getElementById('wishlist-form').reset();
+};
+
+async function toggleReserveWish(id, currentReservedBy) {
+  const newReserved = currentReservedBy ? null : currentUser.email.split('@')[0];
+  await db.collection('wishlist').doc(id).update({ reservedBy: newReserved });
+}
+
+function renderWishlist() {
+  const container = document.getElementById('wishlist-list');
+  if (!container) return;
+  container.innerHTML = '';
+
+  if (!state.wishlist.length) {
+    container.innerHTML = '<p class="text-xs sm:text-sm text-muted col-span-2">Список желаний пока пуст.</p>';
+    return;
+  }
+
+  state.wishlist.forEach(w => {
+    const isReserved = !!w.reservedBy;
+    const card = document.createElement('div');
+    card.className = `p-3.5 sm:p-4 rounded-xl2 border border-line dark:border-line-dark bg-surface dark:bg-surface-dark flex flex-col justify-between gap-3 ${isReserved ? 'opacity-70' : ''}`;
+    
+    card.innerHTML = `
+      <div>
+        <div class="flex items-center justify-between mb-1">
+          <span class="text-xs font-semibold ${w.shared ? 'text-accent' : 'text-muted'}">${w.shared ? '👥 Для двоих' : '🔒 Личное'}</span>
+          ${w.price ? `<span class="text-xs font-bold text-leaf tabular-nums">${money(w.price)}</span>` : ''}
+        </div>
+        <h4 class="font-bold text-sm sm:text-base">${w.title}</h4>
+        ${w.link ? `<a href="${w.link}" target="_blank" class="text-xs text-accent underline mt-1 inline-block truncate max-w-full">Открыть ссылку 🔗</a>` : ''}
+        ${isReserved ? `<p class="text-[10px] text-amber mt-1 font-semibold">🎁 Забронировал(а): ${w.reservedBy}</p>` : ''}
+      </div>
+
+      <div class="flex items-center justify-between pt-2 border-t border-line dark:border-line-dark">
+        <button class="w-reserve text-xs font-medium px-2.5 py-1 rounded-lg border border-line dark:border-line-dark hover:bg-paper dark:hover:bg-white/5">
+          ${isReserved ? 'Отменить бронь' : '🎁 Хочу подарить'}
+        </button>
+        <button class="w-del text-xs text-rose p-1">Удалить</button>
+      </div>
+    `;
+
+    card.querySelector('.w-reserve').onclick = () => toggleReserveWish(w.id, w.reservedBy);
+    card.querySelector('.w-del').onclick = () => db.collection('wishlist').doc(w.id).delete();
+    container.appendChild(card);
+  });
+}
+
+/* ============================= OVERVIEW ============================= */
+function renderOverview() {
+  const todayS = todayStr();
+  const ovDate = document.getElementById('overview-date');
+  if (ovDate) ovDate.textContent = capitalize(formatRuDate(new Date()));
+
+  // Tasks overview
+  const todaysTasks = state.tasks.filter(t => taskOccursOnDate(t, todayS));
+  const doneTasks = todaysTasks.filter(t => t.done).length;
+  const tPct = todaysTasks.length ? Math.round((doneTasks / todaysTasks.length) * 100) : 0;
+  document.getElementById('ov-task-pct').textContent = tPct + '%';
+  document.getElementById('ov-task-count').textContent = `${doneTasks} из ${todaysTasks.length}`;
+  document.getElementById('ov-task-bar').style.width = tPct + '%';
+
+  // Habits overview
+  const doneHabits = state.habits.filter(h => h.completions && h.completions[todayS]).length;
+  const hPct = state.habits.length ? Math.round((doneHabits / state.habits.length) * 100) : 0;
+  document.getElementById('ov-habit-pct').textContent = hPct + '%';
+  document.getElementById('ov-habit-count').textContent = `${doneHabits} из ${state.habits.length}`;
+  document.getElementById('ov-habit-bar').style.width = hPct + '%';
+
+  // Finance overview
+  const todaysSpent = state.finance.filter(t => t.date === todayS && t.type === 'expense').reduce((s,t) => s + t.amount, 0);
+  document.getElementById('ov-spend-today').textContent = money(todaysSpent);
+}
+
+/* ============================= THEME ============================= */
+function applyTheme(theme) {
+  document.documentElement.classList.toggle('dark', theme === 'dark');
+  ['theme-icon','theme-icon-mobile'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.setAttribute('data-lucide', theme === 'dark' ? 'sun' : 'moon');
+  });
+  const label = document.getElementById('theme-label');
+  if (label) label.textContent = theme === 'dark' ? 'Светлая тема' : 'Тёмная тема';
+  localStorage.setItem('cd_theme', theme);
+  lucide.createIcons();
+}
+
+function toggleTheme() {
+  const current = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+  applyTheme(current === 'dark' ? 'light' : 'dark');
+}
+
+/* ============================= INIT ============================= */
+function renderAll() {
+  renderOverview();
+  renderSchedule();
+  renderHabits();
+  renderFinance();
+  renderPiggy();
+  renderShopping();
+  renderWishlist();
+}
+
+function init() {
+  populateCategories();
+  if (document.getElementById('fin-date')) document.getElementById('fin-date').value = todayStr();
+  if (document.getElementById('task-date')) document.getElementById('task-date').value = scheduleDate;
+
+  const savedTheme = localStorage.getItem('cd_theme') || 
+    (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  applyTheme(savedTheme);
+
+  const themeBtn = document.getElementById('theme-toggle');
+  const themeBtnMobile = document.getElementById('theme-toggle-mobile');
+  if (themeBtn) themeBtn.onclick = toggleTheme;
+  if (themeBtnMobile) themeBtnMobile.onclick = toggleTheme;
+
+  updateNotificationBtnState();
+  renderNav();
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
