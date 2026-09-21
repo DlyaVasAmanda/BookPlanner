@@ -638,25 +638,46 @@ function updateNotificationBtnState() {
 document.getElementById('notify-perm-btn').onclick = requestNotificationPermission;
 document.getElementById('notify-perm-btn-mobile').onclick = requestNotificationPermission;
 
+/* ============================= NOTIFICATIONS (15-30 MIN BEFORE) ============================= */
 function checkTaskNotifications() {
   if (!("Notification" in window) || Notification.permission !== 'granted') return;
 
   const now = new Date();
   const todayS = todayStr();
-  const currentHM = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
 
   state.tasks.forEach(t => {
-    if (t.date === todayS && t.start === currentHM && !t.done && !notifiedTaskIds.has(t.id)) {
-      notifiedTaskIds.add(t.id);
-      new Notification("Напоминание о задаче ⏰", {
-        body: `${t.shared ? '👥' : '🔒'} ${t.desc} (в ${t.start})`,
-        icon: "https://cdn-icons-png.flaticon.com/512/854/854878.png"
-      });
+    if (t.date === todayS && !t.done && t.start) {
+      // Преобразуем время задачи в объект Date
+      const [hours, minutes] = t.start.split(':').map(Number);
+      const taskTime = new Date();
+      taskTime.setHours(hours, minutes, 0, 0);
+
+      // Разница в минутах между текущим временем и задачей
+      const diffMinutes = Math.round((taskTime - now) / 60000);
+
+      // Уведомление за 15 минут
+      if (diffMinutes === 15 && !notifiedTaskIds.has(`${t.id}_15`)) {
+        notifiedTaskIds.add(`${t.id}_15`);
+        new Notification("Скоро задача! ⏰ (через 15 мин)", {
+          body: `${t.shared ? '👥' : '🔒'} ${t.desc} начнётся в ${t.start}`,
+          icon: "https://cdn-icons-png.flaticon.com/512/854/854878.png"
+        });
+      }
+
+      // Уведомление за 30 минут
+      if (diffMinutes === 30 && !notifiedTaskIds.has(`${t.id}_30`)) {
+        notifiedTaskIds.add(`${t.id}_30`);
+        new Notification("Напоминание ⏳ (через 30 мин)", {
+          body: `${t.shared ? '👥' : '🔒'} ${t.desc} начнётся в ${t.start}`,
+          icon: "https://cdn-icons-png.flaticon.com/512/854/854878.png"
+        });
+      }
     }
   });
 }
 
-setInterval(checkTaskNotifications, 30000);
+// Проверяем каждую минуту
+setInterval(checkTaskNotifications, 60000);
 
 /* ============================= AUTH ============================= */
 let authMode = 'login';
