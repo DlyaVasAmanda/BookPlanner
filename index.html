@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Компас дня — Семейный планер & Бюджет</title>
 
-<!-- PWA Web App Manifest (Inline via Data URI) -->
+<!-- PWA Web App Manifest -->
 <link rel="manifest" href='data:application/manifest+json,{"name":"Компас дня","short_name":"Компас","start_url":".","display":"standalone","background_color":"#141519","theme_color":"#0E7C73","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/854/854878.png","sizes":"512x512","type":"image/png"}]}'>
 <meta name="theme-color" content="#0E7C73">
 <meta name="mobile-web-app-capable" content="yes">
@@ -355,7 +355,6 @@
           </div>
         </div>
 
-        <!-- ANALYTICS CHARTS SECTION -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div class="rounded-xl2 border border-line dark:border-line-dark p-4 bg-surface dark:bg-surface-dark">
             <h3 class="text-xs font-semibold text-muted dark:text-muted-dark mb-3">Расходы по категориям</h3>
@@ -638,7 +637,6 @@ function updateNotificationBtnState() {
 document.getElementById('notify-perm-btn').onclick = requestNotificationPermission;
 document.getElementById('notify-perm-btn-mobile').onclick = requestNotificationPermission;
 
-/* ============================= NOTIFICATIONS (15-30 MIN BEFORE) ============================= */
 function checkTaskNotifications() {
   if (!("Notification" in window) || Notification.permission !== 'granted') return;
 
@@ -647,16 +645,30 @@ function checkTaskNotifications() {
 
   state.tasks.forEach(t => {
     if (t.date === todayS && !t.done && t.start) {
-      // Преобразуем время задачи в объект Date
-      const [hours, minutes] = t.start.split(':').map(Number);
+      // Нормализуем время к формату "HH:MM"
+      let timeParts = t.start.split(':');
+      if (timeParts.length < 2) return;
+      let h = parseInt(timeParts[0], 10);
+      let m = parseInt(timeParts[1], 10);
+
       const taskTime = new Date();
-      taskTime.setHours(hours, minutes, 0, 0);
+      taskTime.setHours(h, m, 0, 0);
 
-      // Разница в минутах между текущим временем и задачей
-      const diffMinutes = Math.round((taskTime - now) / 60000);
+      // Разница в минутах между временем задачи и текущим временем
+      const diffMs = taskTime.getTime() - now.getTime();
+      const diffMinutes = Math.floor(diffMs / 60000);
 
-      // Уведомление за 15 минут
-      if (diffMinutes === 15 && !notifiedTaskIds.has(`${t.id}_15`)) {
+      // Уведомление за 30 минут (интервал от 28 до 30 минут)
+      if (diffMinutes >= 28 && diffMinutes <= 30 && !notifiedTaskIds.has(`${t.id}_30`)) {
+        notifiedTaskIds.add(`${t.id}_30`);
+        new Notification("Напоминание ⏳ (через 30 мин)", {
+          body: `${t.shared ? '👥' : '🔒'} ${t.desc} начнётся в ${t.start}`,
+          icon: "https://cdn-icons-png.flaticon.com/512/854/854878.png"
+        });
+      }
+
+      // Уведомление за 15 минут (интервал от 13 до 15 минут)
+      if (diffMinutes >= 13 && diffMinutes <= 15 && !notifiedTaskIds.has(`${t.id}_15`)) {
         notifiedTaskIds.add(`${t.id}_15`);
         new Notification("Скоро задача! ⏰ (через 15 мин)", {
           body: `${t.shared ? '👥' : '🔒'} ${t.desc} начнётся в ${t.start}`,
@@ -664,11 +676,11 @@ function checkTaskNotifications() {
         });
       }
 
-      // Уведомление за 30 минут
-      if (diffMinutes === 30 && !notifiedTaskIds.has(`${t.id}_30`)) {
-        notifiedTaskIds.add(`${t.id}_30`);
-        new Notification("Напоминание ⏳ (через 30 мин)", {
-          body: `${t.shared ? '👥' : '🔒'} ${t.desc} начнётся в ${t.start}`,
+      // Уведомление в момент начала (интервал от -1 до 1 минуты)
+      if (diffMinutes >= -1 && diffMinutes <= 1 && !notifiedTaskIds.has(`${t.id}_now`)) {
+        notifiedTaskIds.add(`${t.id}_now`);
+        new Notification("Время задачи! 🎯", {
+          body: `${t.shared ? '👥' : '🔒'} ${t.desc} прямо сейчас (${t.start})`,
           icon: "https://cdn-icons-png.flaticon.com/512/854/854878.png"
         });
       }
@@ -676,8 +688,8 @@ function checkTaskNotifications() {
   });
 }
 
-// Проверяем каждую минуту
-setInterval(checkTaskNotifications, 60000);
+// Проверяем задачи каждые 20 секунд
+setInterval(checkTaskNotifications, 20000);
 
 /* ============================= AUTH ============================= */
 let authMode = 'login';
