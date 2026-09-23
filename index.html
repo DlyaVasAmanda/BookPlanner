@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="ru" class="dark scroll-smooth">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Компас дня — Семейный планер & Бюджет</title>
+<title>Aura & Компас дня — Семейный планер & Бюджет</title>
 
 <!-- PWA Web App Manifest -->
 <link rel="manifest" href='data:application/manifest+json,{"name":"Компас дня","short_name":"Компас","start_url":".","display":"standalone","background_color":"#141519","theme_color":"#0E7C73","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/854/854878.png","sizes":"512x512","type":"image/png"}]}'>
@@ -16,7 +16,8 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+
 <script>
   tailwind.config = {
     darkMode: 'class',
@@ -36,7 +37,9 @@
           accent: { DEFAULT: '#0E7C73', soft: '#DFF3EF', dark: '#3FBDAF' },
           rose: { DEFAULT: '#C2483B', soft: '#F7E3E0' },
           amber: { DEFAULT: '#B8791A', soft: '#F5EAD6' },
-          leaf: { DEFAULT: '#3E7D4C', soft: '#E1EFE2' }
+          leaf: { DEFAULT: '#3E7D4C', soft: '#E1EFE2' },
+          brand: { DEFAULT: '#2563EB', hover: '#1D4ED8' },
+          dark: { bg: '#090A0F', surface: '#12141C' }
         },
         borderRadius: { xl2: '1.1rem' }
       }
@@ -54,447 +57,593 @@
   @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
   .strike { text-decoration: line-through; opacity: .55; }
   .ring-focus:focus-visible { outline: 2px solid #0E7C73; outline-offset: 2px; }
+  .glass-card {
+    background: rgba(18, 20, 28, 0.6);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .hero-glow {
+    background: radial-gradient(circle at 50% 30%, rgba(37, 99, 235, 0.25) 0%, rgba(14, 165, 233, 0.1) 35%, transparent 70%);
+  }
+  .text-gradient {
+    background: linear-gradient(135deg, #FFFFFF 0%, #94A3B8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
 </style>
 </head>
-<body class="bg-base dark:bg-base-dark text-ink dark:text-[#EDEDEC] font-sans min-h-screen transition-colors duration-200">
+<body class="bg-dark-bg text-slate-100 font-sans antialiased selection:bg-brand selection:text-white transition-colors duration-200">
 
-<!-- Auth Modal -->
-<div id="auth-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4">
-  <div class="bg-surface dark:bg-surface-dark border border-line dark:border-line-dark rounded-xl2 max-w-md w-full p-5 sm:p-6 shadow-2xl">
-    <div class="flex items-center gap-3 mb-5">
-      <div class="w-10 h-10 rounded-xl bg-accent flex items-center justify-center shrink-0">
-        <i data-lucide="compass" class="w-6 h-6 text-white"></i>
+<!-- ================================================================= -->
+<!--                            LANDING PAGE                           -->
+<!-- ================================================================= -->
+<div id="landing-view" class="relative min-h-screen flex flex-col justify-between">
+
+  <!-- Navigation Bar -->
+  <header class="fixed top-0 inset-x-0 z-40 glass-card border-b border-white/5 backdrop-blur-md">
+    <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/20">
+          <i data-lucide="compass" class="w-5 h-5 text-white"></i>
+        </div>
+        <span class="font-bold text-xl tracking-tight text-gradient">Aura / Компас</span>
       </div>
-      <div>
-        <h2 class="text-lg sm:text-xl font-bold">Компас дня</h2>
-        <p class="text-xs text-muted dark:text-muted-dark">Семейный планер и учет трат</p>
+
+      <nav class="hidden md:flex items-center gap-8 text-sm font-medium text-slate-400">
+        <a href="#features" class="hover:text-white transition-colors">Возможности</a>
+        <a href="#pricing" class="hover:text-white transition-colors">Тарифы</a>
+      </nav>
+
+      <div class="flex items-center gap-4">
+        <button onclick="launchApp()" class="px-6 py-2.5 rounded-xl bg-brand hover:bg-brand-hover text-white text-sm font-semibold transition-all duration-200 shadow-lg shadow-blue-600/30 hover:shadow-blue-600/50 hover:-translate-y-0.5">
+          Открыть приложение 🚀
+        </button>
       </div>
     </div>
+  </header>
 
-    <!-- Auth Tabs -->
-    <div class="flex border-b border-line dark:border-line-dark mb-4">
-      <button id="auth-tab-login" class="flex-1 py-2 text-sm font-medium border-b-2 border-accent text-accent">Вход</button>
-      <button id="auth-tab-register" class="flex-1 py-2 text-sm font-medium border-b-2 border-transparent text-muted dark:text-muted-dark">Регистрация</button>
-    </div>
+  <main class="relative pt-32 overflow-hidden">
+    <div class="absolute inset-0 hero-glow pointer-events-none"></div>
 
-    <form id="auth-form" class="space-y-3.5">
-      <div>
-        <label class="block text-xs text-muted dark:text-muted-dark mb-1">Email</label>
-        <input required type="email" id="auth-email" placeholder="you@example.com" class="w-full rounded-lg border border-line dark:border-line-dark bg-transparent px-3 py-2 text-sm ring-focus">
+    <!-- Hero Section -->
+    <section class="max-w-7xl mx-auto px-6 pt-16 pb-24 text-center relative z-10">
+      <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-blue-500/30 bg-blue-500/10 text-blue-400 text-xs font-semibold uppercase tracking-wider mb-8 animate-pulse">
+        <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> Aura 2.0 с поддержкой iOS виджетов
       </div>
-      <div>
-        <label class="block text-xs text-muted dark:text-muted-dark mb-1">Пароль</label>
-        <input required type="password" id="auth-password" placeholder="••••••••" class="w-full rounded-lg border border-line dark:border-line-dark bg-transparent px-3 py-2 text-sm ring-focus">
-      </div>
-      <div id="auth-error" class="text-xs text-rose hidden"></div>
-      <button type="submit" id="auth-submit-btn" class="w-full py-2.5 rounded-lg bg-accent text-white font-medium text-sm hover:bg-accent-dark transition-colors">Войти</button>
-    </form>
-  </div>
-</div>
-
-<!-- Task Details Modal -->
-<div id="task-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 hidden">
-  <div class="bg-surface dark:bg-surface-dark border border-line dark:border-line-dark rounded-xl2 max-w-lg w-full p-4 sm:p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
-    <div class="flex items-center justify-between border-b border-line dark:border-line-dark pb-3">
-      <h3 class="font-bold text-base sm:text-lg truncate pr-2" id="modal-task-title">Детали задачи</h3>
-      <button id="close-task-modal" class="p-1 text-muted hover:text-ink dark:hover:text-white text-xl">×</button>
-    </div>
-
-    <div>
-      <label class="block text-xs font-semibold text-muted dark:text-muted-dark mb-1">Заметка / Описание</label>
-      <textarea id="modal-task-note" rows="3" placeholder="Добавьте подробное описание..." class="w-full rounded-lg border border-line dark:border-line-dark bg-transparent p-2.5 text-sm ring-focus"></textarea>
-      <button id="save-note-btn" class="mt-2 text-xs px-3 py-1.5 rounded-lg bg-accent text-white font-medium">Сохранить заметку</button>
-    </div>
-
-    <div class="border-t border-line dark:border-line-dark pt-3">
-      <h4 class="text-xs font-semibold text-muted dark:text-muted-dark mb-2">Обсуждение и комментарии</h4>
-      <div id="modal-comments-list" class="space-y-2 max-h-36 overflow-y-auto mb-3"></div>
       
-      <div class="flex gap-2">
-        <input type="text" id="modal-comment-input" placeholder="Напишите..." class="flex-1 rounded-lg border border-line dark:border-line-dark bg-transparent px-3 py-1.5 text-sm ring-focus">
-        <button id="add-comment-btn" class="px-3 sm:px-4 py-1.5 rounded-lg bg-accent text-white text-xs sm:text-sm font-medium whitespace-nowrap">Отправить</button>
+      <h1 class="text-5xl sm:text-7xl font-extrabold tracking-tight max-w-4xl mx-auto leading-[1.1] text-gradient">
+        Управление задачами и семейным бюджетом.
+      </h1>
+      
+      <p class="mt-6 text-lg sm:text-xl text-slate-400 max-w-2xl mx-auto font-normal leading-relaxed">
+        Единая интеллектуальная система для совместного планирования, накоплений, списков покупок и трекинга привычек с PWA-уведомлениями.
+      </p>
+
+      <div class="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+        <button onclick="launchApp()" class="w-full sm:w-auto px-8 py-4 rounded-xl bg-brand hover:bg-brand-hover text-white font-semibold shadow-xl shadow-blue-600/30 hover:shadow-blue-600/50 transition-all hover:-translate-y-0.5 flex items-center justify-center gap-2">
+          Запустить прямо сейчас <i data-lucide="arrow-right" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <!-- Live Mockup -->
+      <div class="mt-16 relative max-w-5xl mx-auto rounded-2xl glass-card p-3 shadow-2xl border border-white/10">
+        <div class="rounded-xl overflow-hidden bg-dark-surface border border-white/5 relative aspect-[16/9] flex items-center justify-center">
+          <div class="absolute inset-0 bg-gradient-to-tr from-blue-600/10 via-transparent to-emerald-500/10"></div>
+          
+          <div class="w-full h-full p-6 flex flex-col gap-6 text-left">
+            <div class="flex items-center justify-between border-b border-white/10 pb-4">
+              <div class="flex items-center gap-3">
+                <div class="w-3 h-3 rounded-full bg-rose-500"></div>
+                <div class="w-3 h-3 rounded-full bg-amber-500"></div>
+                <div class="w-3 h-3 rounded-full bg-emerald-500"></div>
+              </div>
+              <div class="text-xs font-mono text-slate-500">dlyavasamanda.github.io/BookPlanner/</div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div class="p-4 rounded-xl bg-white/5 border border-white/5">
+                <span class="text-xs text-slate-400">Прогресс за день</span>
+                <div class="text-2xl font-bold mt-1 text-emerald-400">84%</div>
+              </div>
+              <div class="p-4 rounded-xl bg-white/5 border border-white/5">
+                <span class="text-xs text-slate-400">Накопления</span>
+                <div class="text-2xl font-bold mt-1 text-blue-400">125,000 Kč</div>
+              </div>
+              <div class="p-4 rounded-xl bg-white/5 border border-white/5">
+                <span class="text-xs text-slate-400">Совместные цели</span>
+                <div class="text-2xl font-bold mt-1 text-purple-400">6 целей</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features -->
+    <section id="features" class="max-w-7xl mx-auto px-6 py-24">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div class="glass-card p-8 rounded-2xl">
+          <div class="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 mb-6">
+            <i data-lucide="calendar" class="w-6 h-6"></i>
+          </div>
+          <h3 class="text-xl font-semibold mb-3">Календарь и Уведомления</h3>
+          <p class="text-slate-400 text-sm leading-relaxed">
+            Планирование с напоминаниями за 15 и 30 минут до начала события.
+          </p>
+        </div>
+
+        <div class="glass-card p-8 rounded-2xl">
+          <div class="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 mb-6">
+            <i data-lucide="target" class="w-6 h-6"></i>
+          </div>
+          <h3 class="text-xl font-semibold mb-3">Копилка и Бюджет</h3>
+          <p class="text-slate-400 text-sm leading-relaxed">
+            Учет расходов в кронах (Kč) и наглядные графики распределения средств.
+          </p>
+        </div>
+
+        <div class="glass-card p-8 rounded-2xl">
+          <div class="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 mb-6">
+            <i data-lucide="smartphone" class="w-6 h-6"></i>
+          </div>
+          <h3 class="text-xl font-semibold mb-3">Виджеты iOS & Scriptable</h3>
+          <p class="text-slate-400 text-sm leading-relaxed">
+            Вывод списка задач на рабочий стол iPhone с автоматической сортировкой по времени.
+          </p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="border-t border-white/5 py-8 text-center text-xs text-slate-500">
+    © 2026 Aura Inc. Все права защищены.
+  </footer>
+</div>
+
+
+<!-- ================================================================= -->
+<!--                         WEB APP INTERFACE                         -->
+<!-- ================================================================= -->
+<div id="app-view" class="hidden">
+
+  <!-- Auth Modal -->
+  <div id="auth-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-surface dark:bg-surface-dark border border-line dark:border-line-dark rounded-xl2 max-w-md w-full p-5 sm:p-6 shadow-2xl">
+      <div class="flex items-center gap-3 mb-5">
+        <div class="w-10 h-10 rounded-xl bg-accent flex items-center justify-center shrink-0">
+          <i data-lucide="compass" class="w-6 h-6 text-white"></i>
+        </div>
+        <div>
+          <h2 class="text-lg sm:text-xl font-bold">Компас дня</h2>
+          <p class="text-xs text-muted dark:text-muted-dark">Семейный планер и учет трат</p>
+        </div>
+      </div>
+
+      <div class="flex border-b border-line dark:border-line-dark mb-4">
+        <button id="auth-tab-login" class="flex-1 py-2 text-sm font-medium border-b-2 border-accent text-accent">Вход</button>
+        <button id="auth-tab-register" class="flex-1 py-2 text-sm font-medium border-b-2 border-transparent text-muted dark:text-muted-dark">Регистрация</button>
+      </div>
+
+      <form id="auth-form" class="space-y-3.5">
+        <div>
+          <label class="block text-xs text-muted dark:text-muted-dark mb-1">Email</label>
+          <input required type="email" id="auth-email" placeholder="you@example.com" class="w-full rounded-lg border border-line dark:border-line-dark bg-transparent px-3 py-2 text-sm ring-focus">
+        </div>
+        <div>
+          <label class="block text-xs text-muted dark:text-muted-dark mb-1">Пароль</label>
+          <input required type="password" id="auth-password" placeholder="••••••••" class="w-full rounded-lg border border-line dark:border-line-dark bg-transparent px-3 py-2 text-sm ring-focus">
+        </div>
+        <div id="auth-error" class="text-xs text-rose hidden"></div>
+        <button type="submit" id="auth-submit-btn" class="w-full py-2.5 rounded-lg bg-accent text-white font-medium text-sm hover:bg-accent-dark transition-colors">Войти</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Task Details Modal -->
+  <div id="task-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4 hidden">
+    <div class="bg-surface dark:bg-surface-dark border border-line dark:border-line-dark rounded-xl2 max-w-lg w-full p-4 sm:p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-line dark:border-line-dark pb-3">
+        <h3 class="font-bold text-base sm:text-lg truncate pr-2" id="modal-task-title">Детали задачи</h3>
+        <button id="close-task-modal" class="p-1 text-muted hover:text-white text-xl">×</button>
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold text-muted dark:text-muted-dark mb-1">Заметка / Описание</label>
+        <textarea id="modal-task-note" rows="3" placeholder="Добавьте подробное описание..." class="w-full rounded-lg border border-line dark:border-line-dark bg-transparent p-2.5 text-sm ring-focus"></textarea>
+        <button id="save-note-btn" class="mt-2 text-xs px-3 py-1.5 rounded-lg bg-accent text-white font-medium">Сохранить заметку</button>
+      </div>
+
+      <div class="border-t border-line dark:border-line-dark pt-3">
+        <h4 class="text-xs font-semibold text-muted dark:text-muted-dark mb-2">Обсуждение и комментарии</h4>
+        <div id="modal-comments-list" class="space-y-2 max-h-36 overflow-y-auto mb-3"></div>
+        
+        <div class="flex gap-2">
+          <input type="text" id="modal-comment-input" placeholder="Напишите..." class="flex-1 rounded-lg border border-line dark:border-line-dark bg-transparent px-3 py-1.5 text-sm ring-focus">
+          <button id="add-comment-btn" class="px-3 sm:px-4 py-1.5 rounded-lg bg-accent text-white text-xs sm:text-sm font-medium whitespace-nowrap">Отправить</button>
+        </div>
       </div>
     </div>
   </div>
-</div>
 
-<div class="flex min-h-screen">
+  <div class="flex min-h-screen bg-base dark:bg-base-dark text-ink dark:text-[#EDEDEC]">
 
-  <!-- Sidebar (Desktop) -->
-  <aside class="hidden md:flex md:w-60 lg:w-64 flex-col shrink-0 border-r border-line dark:border-line-dark bg-surface/60 dark:bg-surface-dark/40 px-5 py-6">
-    <div class="flex items-center gap-2 px-1 mb-6">
-      <div class="w-8 h-8 rounded-lg bg-accent flex items-center justify-center">
-        <i data-lucide="compass" class="w-4.5 h-4.5 text-white" style="width:18px;height:18px"></i>
-      </div>
-      <span class="font-semibold text-[15px] tracking-tight">Компас дня</span>
-    </div>
-
-    <div class="mb-6 p-3 rounded-xl border border-line dark:border-line-dark bg-paper dark:bg-white/5 space-y-2">
-      <div class="flex items-center justify-between text-xs">
-        <span id="user-email-display" class="font-medium truncate max-w-[120px]">...</span>
-        <button id="logout-btn" class="text-rose hover:underline">Выйти</button>
-      </div>
-      <div class="text-[11px] text-muted dark:text-muted-dark flex items-center justify-between pt-1 border-t border-line dark:border-line-dark">
-        <span>Код пары:</span>
-        <button id="couple-code-btn" class="font-mono font-semibold text-accent hover:underline">Настроить</button>
-      </div>
-    </div>
-
-    <nav class="flex flex-col gap-1" id="sidebar-nav"></nav>
-
-    <div class="mt-auto pt-6 flex flex-col gap-2">
-      <button id="pwa-install-btn" class="hidden flex items-center gap-2 text-xs px-3 py-2 rounded-lg bg-accent text-white font-medium hover:bg-accent-dark transition-colors">
-        <i data-lucide="download" class="w-4 h-4"></i>
-        <span>Установить приложение</span>
-      </button>
-
-      <button id="notify-perm-btn" class="flex items-center gap-2 text-xs px-3 py-2 rounded-lg border border-line dark:border-line-dark hover:bg-paper dark:hover:bg-white/5 transition-colors">
-        <i data-lucide="bell" class="w-4 h-4 text-amber"></i>
-        <span id="notify-btn-label">Включить уведомления</span>
-      </button>
-
-      <button id="theme-toggle" class="flex items-center gap-2 text-xs px-3 py-2 rounded-lg border border-line dark:border-line-dark hover:bg-paper dark:hover:bg-white/5 transition-colors ring-focus">
-        <i data-lucide="moon" class="w-4 h-4" id="theme-icon"></i>
-        <span id="theme-label">Тёмная тема</span>
-      </button>
-    </div>
-  </aside>
-
-  <!-- Main Content Area -->
-  <div class="flex-1 flex flex-col min-w-0">
-
-    <!-- Mobile Top Header Bar -->
-    <header class="md:hidden flex items-center justify-between px-4 py-3 border-b border-line dark:border-line-dark bg-surface/80 dark:bg-surface-dark/80 sticky top-0 z-20 backdrop-blur">
-      <div class="flex items-center gap-2 min-w-0">
-        <div class="w-7 h-7 rounded-lg bg-accent flex items-center justify-center shrink-0">
-          <i data-lucide="compass" class="w-4 h-4 text-white"></i>
+    <!-- Sidebar (Desktop) -->
+    <aside class="hidden md:flex md:w-60 lg:w-64 flex-col shrink-0 border-r border-line dark:border-line-dark bg-surface/60 dark:bg-surface-dark/40 px-5 py-6">
+      <div class="flex items-center gap-2 px-1 mb-6">
+        <div class="w-8 h-8 rounded-lg bg-accent flex items-center justify-center">
+          <i data-lucide="compass" class="w-4.5 h-4.5 text-white"></i>
         </div>
-        <span class="font-semibold text-sm truncate">Компас дня</span>
+        <span class="font-semibold text-[15px] tracking-tight">Компас дня</span>
       </div>
-      <div class="flex items-center gap-1.5 shrink-0">
-        <button id="notify-perm-btn-mobile" class="p-1.5 rounded-lg border border-line dark:border-line-dark text-amber ring-focus">
-          <i data-lucide="bell" class="w-4 h-4"></i>
+
+      <div class="mb-6 p-3 rounded-xl border border-line dark:border-line-dark bg-paper dark:bg-white/5 space-y-2">
+        <div class="flex items-center justify-between text-xs">
+          <span id="user-email-display" class="font-medium truncate max-w-[120px]">...</span>
+          <button id="logout-btn" class="text-rose hover:underline">Выйти</button>
+        </div>
+        <div class="text-[11px] text-muted dark:text-muted-dark flex items-center justify-between pt-1 border-t border-line dark:border-line-dark">
+          <span>Код пары:</span>
+          <button id="couple-code-btn" class="font-mono font-semibold text-accent hover:underline">Настроить</button>
+        </div>
+      </div>
+
+      <nav class="flex flex-col gap-1" id="sidebar-nav"></nav>
+
+      <div class="mt-auto pt-6 flex flex-col gap-2">
+        <button id="pwa-install-btn" class="hidden flex items-center gap-2 text-xs px-3 py-2 rounded-lg bg-accent text-white font-medium hover:bg-accent-dark transition-colors">
+          <i data-lucide="download" class="w-4 h-4"></i>
+          <span>Установить приложение</span>
         </button>
-        <button id="mobile-couple-btn" class="px-2 py-1 text-xs border border-line dark:border-line-dark rounded-lg text-accent font-mono font-semibold">Пара</button>
-        <button id="theme-toggle-mobile" class="p-1.5 rounded-lg border border-line dark:border-line-dark ring-focus">
-          <i data-lucide="moon" class="w-4 h-4" id="theme-icon-mobile"></i>
+
+        <button id="notify-perm-btn" class="flex items-center gap-2 text-xs px-3 py-2 rounded-lg border border-line dark:border-line-dark hover:bg-paper dark:hover:bg-white/5 transition-colors">
+          <i data-lucide="bell" class="w-4 h-4 text-amber"></i>
+          <span id="notify-btn-label">Включить уведомления</span>
         </button>
-        <button id="logout-btn-mobile" class="p-1.5 rounded-lg border border-line dark:border-line-dark text-rose ring-focus">
-          <i data-lucide="log-out" class="w-4 h-4"></i>
+
+        <button id="theme-toggle" class="flex items-center gap-2 text-xs px-3 py-2 rounded-lg border border-line dark:border-line-dark hover:bg-paper dark:hover:bg-white/5 transition-colors ring-focus">
+          <i data-lucide="moon" class="w-4 h-4" id="theme-icon"></i>
+          <span id="theme-label">Тёмная тема</span>
         </button>
       </div>
-    </header>
+    </aside>
 
-    <main class="flex-1 px-3 sm:px-6 lg:px-10 py-4 sm:py-8 pb-28 md:pb-10 max-w-5xl w-full mx-auto">
+    <!-- Main Content Area -->
+    <div class="flex-1 flex flex-col min-w-0">
 
-      <!-- OVERVIEW TAB -->
-      <section id="panel-overview" class="tab-panel space-y-4 sm:space-y-6">
-        <div>
-          <h1 class="text-xl sm:text-2xl font-semibold tracking-tight" id="overview-date"></h1>
-          <p class="text-xs sm:text-sm text-muted dark:text-muted-dark mt-0.5">Всё, что происходит сегодня, в одном месте</p>
+      <!-- Mobile Top Header Bar -->
+      <header class="md:hidden flex items-center justify-between px-4 py-3 border-b border-line dark:border-line-dark bg-surface/80 dark:bg-surface-dark/80 sticky top-0 z-20 backdrop-blur">
+        <div class="flex items-center gap-2 min-w-0">
+          <div class="w-7 h-7 rounded-lg bg-accent flex items-center justify-center shrink-0">
+            <i data-lucide="compass" class="w-4 h-4 text-white"></i>
+          </div>
+          <span class="font-semibold text-sm truncate">Компас дня</span>
         </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-          <div class="rounded-xl2 border border-line dark:border-line-dark p-4 sm:p-5 bg-surface dark:bg-surface-dark">
-            <div class="flex items-center justify-between mb-2 sm:mb-3">
-              <span class="text-xs sm:text-sm text-muted dark:text-muted-dark">Задачи на сегодня</span>
-              <i data-lucide="check-circle-2" class="w-4 h-4 text-accent"></i>
-            </div>
-            <div class="flex items-end gap-2">
-              <span class="text-2xl sm:text-3xl font-semibold tabular-nums" id="ov-task-pct">0%</span>
-              <span class="text-xs sm:text-sm text-muted dark:text-muted-dark mb-0.5" id="ov-task-count">0 из 0</span>
-            </div>
-            <div class="w-full h-1.5 rounded-full bg-line dark:bg-line-dark mt-2.5 overflow-hidden">
-              <div id="ov-task-bar" class="h-full bg-accent transition-all duration-300" style="width:0%"></div>
-            </div>
-          </div>
-
-          <div class="rounded-xl2 border border-line dark:border-line-dark p-4 sm:p-5 bg-surface dark:bg-surface-dark">
-            <div class="flex items-center justify-between mb-2 sm:mb-3">
-              <span class="text-xs sm:text-sm text-muted dark:text-muted-dark">Привычки сегодня</span>
-              <i data-lucide="flame" class="w-4 h-4 text-amber"></i>
-            </div>
-            <div class="flex items-end gap-2">
-              <span class="text-2xl sm:text-3xl font-semibold tabular-nums" id="ov-habit-pct">0%</span>
-              <span class="text-xs sm:text-sm text-muted dark:text-muted-dark mb-0.5" id="ov-habit-count">0 из 0</span>
-            </div>
-            <div class="w-full h-1.5 rounded-full bg-line dark:bg-line-dark mt-2.5 overflow-hidden">
-              <div id="ov-habit-bar" class="h-full bg-amber transition-all duration-300" style="width:0%"></div>
-            </div>
-          </div>
-
-          <div class="rounded-xl2 border border-line dark:border-line-dark p-4 sm:p-5 bg-surface dark:bg-surface-dark">
-            <div class="flex items-center justify-between mb-2 sm:mb-3">
-              <span class="text-xs sm:text-sm text-muted dark:text-muted-dark">Траты сегодня</span>
-              <i data-lucide="wallet" class="w-4 h-4 text-rose"></i>
-            </div>
-            <div class="flex items-end gap-2">
-              <span class="text-2xl sm:text-3xl font-semibold tabular-nums" id="ov-spend-today">0 Kč</span>
-            </div>
-            <p class="text-xs sm:text-sm text-muted dark:text-muted-dark mt-2" id="ov-spend-note">Операций сегодня нет</p>
-          </div>
+        <div class="flex items-center gap-1.5 shrink-0">
+          <button id="notify-perm-btn-mobile" class="p-1.5 rounded-lg border border-line dark:border-line-dark text-amber ring-focus">
+            <i data-lucide="bell" class="w-4 h-4"></i>
+          </button>
+          <button id="mobile-couple-btn" class="px-2 py-1 text-xs border border-line dark:border-line-dark rounded-lg text-accent font-mono font-semibold">Пара</button>
+          <button id="theme-toggle-mobile" class="p-1.5 rounded-lg border border-line dark:border-line-dark ring-focus">
+            <i data-lucide="moon" class="w-4 h-4" id="theme-icon-mobile"></i>
+          </button>
+          <button id="logout-btn-mobile" class="p-1.5 rounded-lg border border-line dark:border-line-dark text-rose ring-focus">
+            <i data-lucide="log-out" class="w-4 h-4"></i>
+          </button>
         </div>
+      </header>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <div class="rounded-xl2 border border-line dark:border-line-dark p-4 sm:p-5 bg-surface dark:bg-surface-dark">
-            <h3 class="text-sm font-medium mb-3">Чек-лист привычек</h3>
-            <div id="ov-habit-list" class="space-y-2"></div>
-          </div>
-          <div class="rounded-xl2 border border-line dark:border-line-dark p-4 sm:p-5 bg-surface dark:bg-surface-dark">
-            <h3 class="text-sm font-medium mb-3">Ближайшие задачи</h3>
-            <div id="ov-task-list" class="space-y-2"></div>
-          </div>
-        </div>
-      </section>
+      <main class="flex-1 px-3 sm:px-6 lg:px-10 py-4 sm:py-8 pb-28 md:pb-10 max-w-5xl w-full mx-auto">
 
-      <!-- SCHEDULE TAB -->
-      <section id="panel-schedule" class="tab-panel hidden space-y-4 sm:space-y-6">
-        <div class="flex flex-wrap items-center justify-between gap-3"></div>
-
-        <form id="task-form" class="rounded-xl2 border border-line dark:border-line-dark p-3.5 sm:p-5 bg-surface dark:bg-surface-dark space-y-3">
-          <input type="hidden" id="task-edit-id" value="">
-          
-          <div class="grid grid-cols-2 sm:grid-cols-6 gap-2.5 sm:gap-3">
-            <div class="col-span-2 sm:col-span-1">
-              <label class="block text-[11px] sm:text-xs text-muted dark:text-muted-dark mb-1">Дата</label>
-              <input required type="date" id="task-date" class="w-full rounded-lg border border-line dark:border-line-dark bg-transparent px-2.5 py-1.5 sm:py-2 text-xs sm:text-sm ring-focus">
-            </div>
-            <div class="col-span-1">
-              <label class="block text-[11px] sm:text-xs text-muted dark:text-muted-dark mb-1">Начало</label>
-              <input required type="time" id="task-start" class="w-full rounded-lg border border-line dark:border-line-dark bg-transparent px-2 py-1.5 sm:py-2 text-xs sm:text-sm ring-focus">
-            </div>
-            <div class="col-span-1">
-              <label class="block text-[11px] sm:text-xs text-muted dark:text-muted-dark mb-1">Конец</label>
-              <input required type="time" id="task-end" class="w-full rounded-lg border border-line dark:border-line-dark bg-transparent px-2 py-1.5 sm:py-2 text-xs sm:text-sm ring-focus">
-            </div>
-            <div class="col-span-2 sm:col-span-3">
-              <label class="block text-[11px] sm:text-xs text-muted dark:text-muted-dark mb-1">Описание задачи</label>
-              <input required type="text" id="task-desc" placeholder="Например: Встреча или созвон" class="w-full rounded-lg border border-line dark:border-line-dark bg-transparent px-2.5 py-1.5 sm:py-2 text-xs sm:text-sm ring-focus">
-            </div>
+        <!-- OVERVIEW TAB -->
+        <section id="panel-overview" class="tab-panel space-y-4 sm:space-y-6">
+          <div>
+            <h1 class="text-xl sm:text-2xl font-semibold tracking-tight" id="overview-date"></h1>
+            <p class="text-xs sm:text-sm text-muted dark:text-muted-dark mt-0.5">Всё, что происходит сегодня, в одном месте</p>
           </div>
 
-          <div class="grid grid-cols-2 sm:grid-cols-6 gap-2.5 sm:gap-3 items-end">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+            <div class="rounded-xl2 border border-line dark:border-line-dark p-4 sm:p-5 bg-surface dark:bg-surface-dark">
+              <div class="flex items-center justify-between mb-2 sm:mb-3">
+                <span class="text-xs sm:text-sm text-muted dark:text-muted-dark">Задачи на сегодня</span>
+                <i data-lucide="check-circle-2" class="w-4 h-4 text-accent"></i>
+              </div>
+              <div class="flex items-end gap-2">
+                <span class="text-2xl sm:text-3xl font-semibold tabular-nums" id="ov-task-pct">0%</span>
+                <span class="text-xs sm:text-sm text-muted dark:text-muted-dark mb-0.5" id="ov-task-count">0 из 0</span>
+              </div>
+              <div class="w-full h-1.5 rounded-full bg-line dark:bg-line-dark mt-2.5 overflow-hidden">
+                <div id="ov-task-bar" class="h-full bg-accent transition-all duration-300" style="width:0%"></div>
+              </div>
+            </div>
+
+            <div class="rounded-xl2 border border-line dark:border-line-dark p-4 sm:p-5 bg-surface dark:bg-surface-dark">
+              <div class="flex items-center justify-between mb-2 sm:mb-3">
+                <span class="text-xs sm:text-sm text-muted dark:text-muted-dark">Привычки сегодня</span>
+                <i data-lucide="flame" class="w-4 h-4 text-amber"></i>
+              </div>
+              <div class="flex items-end gap-2">
+                <span class="text-2xl sm:text-3xl font-semibold tabular-nums" id="ov-habit-pct">0%</span>
+                <span class="text-xs sm:text-sm text-muted dark:text-muted-dark mb-0.5" id="ov-habit-count">0 из 0</span>
+              </div>
+              <div class="w-full h-1.5 rounded-full bg-line dark:bg-line-dark mt-2.5 overflow-hidden">
+                <div id="ov-habit-bar" class="h-full bg-amber transition-all duration-300" style="width:0%"></div>
+              </div>
+            </div>
+
+            <div class="rounded-xl2 border border-line dark:border-line-dark p-4 sm:p-5 bg-surface dark:bg-surface-dark">
+              <div class="flex items-center justify-between mb-2 sm:mb-3">
+                <span class="text-xs sm:text-sm text-muted dark:text-muted-dark">Траты сегодня</span>
+                <i data-lucide="wallet" class="w-4 h-4 text-rose"></i>
+              </div>
+              <div class="flex items-end gap-2">
+                <span class="text-2xl sm:text-3xl font-semibold tabular-nums" id="ov-spend-today">0 Kč</span>
+              </div>
+              <p class="text-xs sm:text-sm text-muted dark:text-muted-dark mt-2" id="ov-spend-note">Операций сегодня нет</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div class="rounded-xl2 border border-line dark:border-line-dark p-4 sm:p-5 bg-surface dark:bg-surface-dark">
+              <h3 class="text-sm font-medium mb-3">Чек-лист привычек</h3>
+              <div id="ov-habit-list" class="space-y-2"></div>
+            </div>
+            <div class="rounded-xl2 border border-line dark:border-line-dark p-4 sm:p-5 bg-surface dark:bg-surface-dark">
+              <h3 class="text-sm font-medium mb-3">Ближайшие задачи</h3>
+              <div id="ov-task-list" class="space-y-2"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- SCHEDULE TAB -->
+        <section id="panel-schedule" class="tab-panel hidden space-y-4 sm:space-y-6">
+          <div class="flex flex-wrap items-center justify-between gap-3"></div>
+
+          <form id="task-form" class="rounded-xl2 border border-line dark:border-line-dark p-3.5 sm:p-5 bg-surface dark:bg-surface-dark space-y-3">
+            <input type="hidden" id="task-edit-id" value="">
+            
+            <div class="grid grid-cols-2 sm:grid-cols-6 gap-2.5 sm:gap-3">
+              <div class="col-span-2 sm:col-span-1">
+                <label class="block text-[11px] sm:text-xs text-muted dark:text-muted-dark mb-1">Дата</label>
+                <input required type="date" id="task-date" class="w-full rounded-lg border border-line dark:border-line-dark bg-transparent px-2.5 py-1.5 sm:py-2 text-xs sm:text-sm ring-focus">
+              </div>
+              <div class="col-span-1">
+                <label class="block text-[11px] sm:text-xs text-muted dark:text-muted-dark mb-1">Начало</label>
+                <input required type="time" id="task-start" class="w-full rounded-lg border border-line dark:border-line-dark bg-transparent px-2 py-1.5 sm:py-2 text-xs sm:text-sm ring-focus">
+              </div>
+              <div class="col-span-1">
+                <label class="block text-[11px] sm:text-xs text-muted dark:text-muted-dark mb-1">Конец</label>
+                <input required type="time" id="task-end" class="w-full rounded-lg border border-line dark:border-line-dark bg-transparent px-2 py-1.5 sm:py-2 text-xs sm:text-sm ring-focus">
+              </div>
+              <div class="col-span-2 sm:col-span-3">
+                <label class="block text-[11px] sm:text-xs text-muted dark:text-muted-dark mb-1">Описание задачи</label>
+                <input required type="text" id="task-desc" placeholder="Например: Встреча или созвон" class="w-full rounded-lg border border-line dark:border-line-dark bg-transparent px-2.5 py-1.5 sm:py-2 text-xs sm:text-sm ring-focus">
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-6 gap-2.5 sm:gap-3 items-end">
+              <div>
+                <label class="block text-[11px] sm:text-xs text-muted dark:text-muted-dark mb-1">Приоритет</label>
+                <select id="task-priority" class="w-full rounded-lg border border-line dark:border-line-dark bg-transparent px-2 py-1.5 sm:py-2 text-xs sm:text-sm ring-focus">
+                  <option value="Низкий">Низкий</option>
+                  <option value="Средний" selected>Средний</option>
+                  <option value="Высокий">Высокий</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-[11px] sm:text-xs text-muted dark:text-muted-dark mb-1">Доступ</label>
+                <select id="task-shared" class="w-full rounded-lg border border-line dark:border-line-dark bg-transparent px-2 py-1.5 sm:py-2 text-xs sm:text-sm ring-focus">
+                  <option value="private">🔒 Личная</option>
+                  <option value="shared" selected>👥 Общая</option>
+                </select>
+              </div>
+              <div class="col-span-2 sm:col-span-2">
+                <label class="block text-[11px] sm:text-xs text-muted dark:text-muted-dark mb-1">Повторение</label>
+                <select id="task-repeat" class="w-full rounded-lg border border-line dark:border-line-dark bg-transparent px-2 py-1.5 sm:py-2 text-xs sm:text-sm ring-focus">
+                  <option value="none">Не повторяется</option>
+                  <option value="daily">Каждый день</option>
+                  <option value="weekly">Раз в неделю</option>
+                </select>
+              </div>
+              <div class="col-span-2 flex items-end justify-end gap-2 pt-1 sm:pt-0">
+                <button type="button" id="copy-day-btn" class="w-1/2 rounded-lg border border-line dark:border-line-dark hover:bg-paper dark:hover:bg-white/5 text-[11px] sm:text-xs py-2 font-medium transition-colors ring-focus truncate">📋 Скопировать день</button>
+                <button type="submit" id="task-submit-btn" class="w-1/2 rounded-lg bg-accent hover:bg-accent-dark text-white text-[11px] sm:text-xs font-medium py-2 transition-colors ring-focus truncate">Добавить</button>
+              </div>
+            </div>
+          </form>
+
+          <div class="rounded-xl2 border border-line dark:border-line-dark bg-surface dark:bg-surface-dark overflow-hidden">
+            <div id="schedule-scroll" class="max-h-[550px] overflow-y-auto overscroll-contain"></div>
+          </div>
+
+          <div>
+            <h3 class="text-sm font-medium mb-2.5">Задачи этого дня</h3>
+            <div id="day-task-list" class="space-y-2"></div>
+          </div>
+        </section>
+
+        <!-- HABITS TAB -->
+        <section id="panel-habits" class="tab-panel hidden space-y-4 sm:space-y-6">
+          <div>
+            <h1 class="text-xl sm:text-2xl font-semibold tracking-tight">Трекер привычек</h1>
+            <p class="text-xs sm:text-sm text-muted dark:text-muted-dark mt-0.5">Недельный трекер привычек</p>
+          </div>
+
+          <form id="habit-form" class="rounded-xl2 border border-line dark:border-line-dark p-3.5 sm:p-5 bg-surface dark:bg-surface-dark flex flex-col sm:flex-row gap-2.5 sm:gap-3">
+            <input required type="text" id="habit-name" placeholder="Новая привычка..." class="flex-1 rounded-lg border border-line dark:border-line-dark bg-transparent px-3 py-2 text-xs sm:text-sm ring-focus">
+            <select id="habit-shared" class="rounded-lg border border-line dark:border-line-dark bg-transparent px-3 py-2 text-xs sm:text-sm ring-focus">
+              <option value="private">🔒 Личная</option>
+              <option value="shared" selected>👥 Общая</option>
+            </select>
+            <button type="submit" class="rounded-lg bg-accent hover:bg-accent-dark text-white text-xs sm:text-sm font-medium px-4 py-2 transition-colors ring-focus whitespace-nowrap">Добавить привычку</button>
+          </form>
+
+          <div id="habit-list" class="space-y-2.5 sm:space-y-3"></div>
+        </section>
+
+        <!-- FINANCE TAB -->
+        <section id="panel-finance" class="tab-panel hidden space-y-4 sm:space-y-6">
+          <div>
+            <h1 class="text-xl sm:text-2xl font-semibold tracking-tight">Семейный бюджет</h1>
+            <p class="text-xs sm:text-sm text-muted dark:text-muted-dark mt-0.5">Доходы и расходы (личные и общие)</p>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+            <div class="rounded-xl2 border border-line dark:border-line-dark p-4 sm:p-5 bg-surface dark:bg-surface-dark">
+              <span class="text-xs sm:text-sm text-muted dark:text-muted-dark">Доходы за месяц</span>
+              <div class="text-xl sm:text-2xl font-semibold tabular-nums text-leaf mt-1" id="fin-income">0 Kč</div>
+            </div>
+            <div class="rounded-xl2 border border-line dark:border-line-dark p-4 sm:p-5 bg-surface dark:bg-surface-dark">
+              <span class="text-xs sm:text-sm text-muted dark:text-muted-dark">Расходы за месяц</span>
+              <div class="text-xl sm:text-2xl font-semibold tabular-nums text-rose mt-1" id="fin-expense">0 Kč</div>
+            </div>
+            <div class="rounded-xl2 border border-line dark:border-line-dark p-4 sm:p-5 bg-surface dark:bg-surface-dark">
+              <span class="text-xs sm:text-sm text-muted dark:text-muted-dark">Чистый остаток</span>
+              <div class="text-xl sm:text-2xl font-semibold tabular-nums mt-1" id="fin-balance">0 Kč</div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="rounded-xl2 border border-line dark:border-line-dark p-4 bg-surface dark:bg-surface-dark">
+              <h3 class="text-xs font-semibold text-muted dark:text-muted-dark mb-3">Расходы по категориям</h3>
+              <div class="relative h-48 flex items-center justify-center">
+                <canvas id="chart-categories"></canvas>
+              </div>
+            </div>
+            <div class="rounded-xl2 border border-line dark:border-line-dark p-4 bg-surface dark:bg-surface-dark">
+              <h3 class="text-xs font-semibold text-muted dark:text-muted-dark mb-3">Доходы vs Расходы</h3>
+              <div class="relative h-48 flex items-center justify-center">
+                <canvas id="chart-summary"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <form id="finance-form" class="rounded-xl2 border border-line dark:border-line-dark p-3.5 sm:p-5 bg-surface dark:bg-surface-dark grid grid-cols-2 sm:grid-cols-6 gap-2.5 sm:gap-3">
             <div>
-              <label class="block text-[11px] sm:text-xs text-muted dark:text-muted-dark mb-1">Приоритет</label>
-              <select id="task-priority" class="w-full rounded-lg border border-line dark:border-line-dark bg-transparent px-2 py-1.5 sm:py-2 text-xs sm:text-sm ring-focus">
-                <option value="Низкий">Низкий</option>
-                <option value="Средний" selected>Средний</option>
-                <option value="Высокий">Высокий</option>
+              <label class="block text-[11px] sm:text-xs text-muted dark:text-muted-dark mb-1">Сумма (Kč)</label>
+              <input required type="number" min="0" step="0.01" id="fin-amount" placeholder="0" class="w-full rounded-lg border border-line dark:border-line-dark bg-transparent px-2.5 py-1.5 sm:py-2 text-xs sm:text-sm ring-focus">
+            </div>
+            <div>
+              <label class="block text-[11px] sm:text-xs text-muted dark:text-muted-dark mb-1">Тип</label>
+              <select id="fin-type" class="w-full rounded-lg border border-line dark:border-line-dark bg-transparent px-2 py-1.5 sm:py-2 text-xs sm:text-sm ring-focus">
+                <option value="expense">Расход</option>
+                <option value="income">Доход</option>
               </select>
+            </div>
+            <div>
+              <label class="block text-[11px] sm:text-xs text-muted dark:text-muted-dark mb-1">Категория</label>
+              <select id="fin-category" class="w-full rounded-lg border border-line dark:border-line-dark bg-transparent px-2 py-1.5 sm:py-2 text-xs sm:text-sm ring-focus"></select>
+            </div>
+            <div>
+              <label class="block text-[11px] sm:text-xs text-muted dark:text-muted-dark mb-1">Бюджет</label>
+              <select id="fin-shared" class="w-full rounded-lg border border-line dark:border-line-dark bg-transparent px-2 py-1.5 sm:py-2 text-xs sm:text-sm ring-focus">
+                <option value="shared" selected>👥 Семейный</option>
+                <option value="private">🔒 Личный</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[11px] sm:text-xs text-muted dark:text-muted-dark mb-1">Дата</label>
+              <input required type="date" id="fin-date" class="w-full rounded-lg border border-line dark:border-line-dark bg-transparent px-2 py-1.5 sm:py-2 text-xs sm:text-sm ring-focus">
+            </div>
+            <div class="flex items-end col-span-2 sm:col-span-1">
+              <button type="submit" class="w-full rounded-lg bg-accent hover:bg-accent-dark text-white text-xs sm:text-sm font-medium py-2 transition-colors ring-focus">Добавить</button>
+            </div>
+          </form>
+
+          <div>
+            <h3 class="text-sm font-medium mb-2.5">Последние операции</h3>
+            <div id="finance-list" class="space-y-2"></div>
+          </div>
+        </section>
+
+        <!-- PIGGY BANK TAB -->
+        <section id="panel-piggy" class="tab-panel hidden space-y-4 sm:space-y-6">
+          <div>
+            <h1 class="text-xl sm:text-2xl font-semibold tracking-tight">Копилка и Накопления 🎯</h1>
+            <p class="text-xs sm:text-sm text-muted dark:text-muted-dark mt-0.5">Финансовые цели и совместные накопления</p>
+          </div>
+
+          <form id="piggy-form" class="rounded-xl2 border border-line dark:border-line-dark p-3.5 sm:p-5 bg-surface dark:bg-surface-dark grid grid-cols-1 sm:grid-cols-5 gap-2.5 sm:gap-3">
+            <div class="sm:col-span-2">
+              <label class="block text-[11px] sm:text-xs text-muted dark:text-muted-dark mb-1">На что копим?</label>
+              <input required type="text" id="piggy-title" placeholder="Например: Отпуск у моря" class="w-full rounded-lg border border-line dark:border-line-dark bg-transparent px-3 py-2 text-xs sm:text-sm ring-focus">
+            </div>
+            <div>
+              <label class="block text-[11px] sm:text-xs text-muted dark:text-muted-dark mb-1">Целевая сумма (Kč)</label>
+              <input required type="number" min="1" id="piggy-target" placeholder="50000" class="w-full rounded-lg border border-line dark:border-line-dark bg-transparent px-3 py-2 text-xs sm:text-sm ring-focus">
             </div>
             <div>
               <label class="block text-[11px] sm:text-xs text-muted dark:text-muted-dark mb-1">Доступ</label>
-              <select id="task-shared" class="w-full rounded-lg border border-line dark:border-line-dark bg-transparent px-2 py-1.5 sm:py-2 text-xs sm:text-sm ring-focus">
-                <option value="private">🔒 Личная</option>
-                <option value="shared" selected>👥 Общая</option>
+              <select id="piggy-shared" class="w-full rounded-lg border border-line dark:border-line-dark bg-transparent px-2 py-2 text-xs sm:text-sm ring-focus">
+                <option value="shared" selected>👥 Совместно</option>
+                <option value="private">🔒 Лично</option>
               </select>
             </div>
-            <div class="col-span-2 sm:col-span-2">
-              <label class="block text-[11px] sm:text-xs text-muted dark:text-muted-dark mb-1">Повторение</label>
-              <select id="task-repeat" class="w-full rounded-lg border border-line dark:border-line-dark bg-transparent px-2 py-1.5 sm:py-2 text-xs sm:text-sm ring-focus">
-                <option value="none">Не повторяется</option>
-                <option value="daily">Каждый день</option>
-                <option value="weekly">Раз в неделю</option>
+            <div class="flex items-end">
+              <button type="submit" class="w-full py-2 rounded-lg bg-accent text-white font-medium text-xs sm:text-sm hover:bg-accent-dark transition-colors">Создать цель</button>
+            </div>
+          </form>
+
+          <div id="piggy-list" class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4"></div>
+        </section>
+
+        <!-- SHOPPING TAB -->
+        <section id="panel-shopping" class="tab-panel hidden space-y-4 sm:space-y-6">
+          <div>
+            <h1 class="text-xl sm:text-2xl font-semibold tracking-tight">Список покупок</h1>
+            <p class="text-xs sm:text-sm text-muted dark:text-muted-dark mt-0.5">Общий список товаров в магазин</p>
+          </div>
+
+          <form id="shopping-form" class="rounded-xl2 border border-line dark:border-line-dark p-3.5 sm:p-5 bg-surface dark:bg-surface-dark flex gap-2">
+            <input required type="text" id="shop-title" placeholder="Что нужно купить?..." class="flex-1 rounded-lg border border-line dark:border-line-dark bg-transparent px-3 py-2 text-xs sm:text-sm ring-focus">
+            <button type="submit" class="rounded-lg bg-accent hover:bg-accent-dark text-white text-xs sm:text-sm font-medium px-4 py-2 transition-colors ring-focus whitespace-nowrap">Добавить</button>
+          </form>
+
+          <div id="shopping-list" class="space-y-2"></div>
+        </section>
+
+        <!-- WISHLIST TAB -->
+        <section id="panel-wishlist" class="tab-panel hidden space-y-4 sm:space-y-6">
+          <div>
+            <h1 class="text-xl sm:text-2xl font-semibold tracking-tight">Вишлист 🎁</h1>
+            <p class="text-xs sm:text-sm text-muted dark:text-muted-dark mt-0.5">Список желаний и подарков</p>
+          </div>
+
+          <form id="wishlist-form" class="rounded-xl2 border border-line dark:border-line-dark p-3.5 sm:p-5 bg-surface dark:bg-surface-dark grid grid-cols-1 sm:grid-cols-6 gap-2.5 sm:gap-3">
+            <div class="sm:col-span-2">
+              <label class="block text-[11px] sm:text-xs text-muted dark:text-muted-dark mb-1">Название желания</label>
+              <input required type="text" id="wish-title" placeholder="Например: Наушники" class="w-full rounded-lg border border-line dark:border-line-dark bg-transparent px-3 py-2 text-xs sm:text-sm ring-focus">
+            </div>
+            <div>
+              <label class="block text-[11px] sm:text-xs text-muted dark:text-muted-dark mb-1">Цена (Kč)</label>
+              <input type="number" min="0" id="wish-price" placeholder="0" class="w-full rounded-lg border border-line dark:border-line-dark bg-transparent px-3 py-2 text-xs sm:text-sm ring-focus">
+            </div>
+            <div class="sm:col-span-2">
+              <label class="block text-[11px] sm:text-xs text-muted dark:text-muted-dark mb-1">Ссылка на сайт</label>
+              <input type="url" id="wish-link" placeholder="https://..." class="w-full rounded-lg border border-line dark:border-line-dark bg-transparent px-3 py-2 text-xs sm:text-sm ring-focus">
+            </div>
+            <div>
+              <label class="block text-[11px] sm:text-xs text-muted dark:text-muted-dark mb-1">Видимость</label>
+              <select id="wish-shared" class="w-full rounded-lg border border-line dark:border-line-dark bg-transparent px-2 py-2 text-xs sm:text-sm ring-focus">
+                <option value="shared" selected>👥 Для двоих</option>
+                <option value="private">🔒 Личное</option>
               </select>
             </div>
-            <div class="col-span-2 flex items-end justify-end gap-2 pt-1 sm:pt-0">
-              <button type="button" id="copy-day-btn" class="w-1/2 rounded-lg border border-line dark:border-line-dark hover:bg-paper dark:hover:bg-white/5 text-[11px] sm:text-xs py-2 font-medium transition-colors ring-focus truncate">📋 Скопировать день</button>
-              <button type="submit" id="task-submit-btn" class="w-1/2 rounded-lg bg-accent hover:bg-accent-dark text-white text-[11px] sm:text-xs font-medium py-2 transition-colors ring-focus truncate">Добавить</button>
+            <div class="sm:col-span-6 flex justify-end">
+              <button type="submit" class="w-full sm:w-auto px-6 py-2 rounded-lg bg-accent text-white font-medium text-xs sm:text-sm hover:bg-accent-dark transition-colors">Добавить в вишлист</button>
             </div>
-          </div>
-        </form>
+          </form>
 
-        <div class="rounded-xl2 border border-line dark:border-line-dark bg-surface dark:bg-surface-dark overflow-hidden">
-          <div id="schedule-scroll" class="max-h-[550px] overflow-y-auto overscroll-contain"></div>
-        </div>
+          <div id="wishlist-list" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+        </section>
 
-        <div>
-          <h3 class="text-sm font-medium mb-2.5">Задачи этого дня</h3>
-          <div id="day-task-list" class="space-y-2"></div>
-        </div>
-      </section>
-
-      <!-- HABITS TAB -->
-      <section id="panel-habits" class="tab-panel hidden space-y-4 sm:space-y-6">
-        <div>
-          <h1 class="text-xl sm:text-2xl font-semibold tracking-tight">Трекер привычек</h1>
-          <p class="text-xs sm:text-sm text-muted dark:text-muted-dark mt-0.5">Недельный трекер привычек</p>
-        </div>
-
-        <form id="habit-form" class="rounded-xl2 border border-line dark:border-line-dark p-3.5 sm:p-5 bg-surface dark:bg-surface-dark flex flex-col sm:flex-row gap-2.5 sm:gap-3">
-          <input required type="text" id="habit-name" placeholder="Новая привычка..." class="flex-1 rounded-lg border border-line dark:border-line-dark bg-transparent px-3 py-2 text-xs sm:text-sm ring-focus">
-          <select id="habit-shared" class="rounded-lg border border-line dark:border-line-dark bg-transparent px-3 py-2 text-xs sm:text-sm ring-focus">
-            <option value="private">🔒 Личная</option>
-            <option value="shared" selected>👥 Общая</option>
-          </select>
-          <button type="submit" class="rounded-lg bg-accent hover:bg-accent-dark text-white text-xs sm:text-sm font-medium px-4 py-2 transition-colors ring-focus whitespace-nowrap">Добавить привычку</button>
-        </form>
-
-        <div id="habit-list" class="space-y-2.5 sm:space-y-3"></div>
-      </section>
-
-      <!-- FINANCE TAB WITH ANALYTICS CHART -->
-      <section id="panel-finance" class="tab-panel hidden space-y-4 sm:space-y-6">
-        <div>
-          <h1 class="text-xl sm:text-2xl font-semibold tracking-tight">Семейный бюджет</h1>
-          <p class="text-xs sm:text-sm text-muted dark:text-muted-dark mt-0.5">Доходы и расходы (личные и общие)</p>
-        </div>
-
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-          <div class="rounded-xl2 border border-line dark:border-line-dark p-4 sm:p-5 bg-surface dark:bg-surface-dark">
-            <span class="text-xs sm:text-sm text-muted dark:text-muted-dark">Доходы за месяц</span>
-            <div class="text-xl sm:text-2xl font-semibold tabular-nums text-leaf mt-1" id="fin-income">0 Kč</div>
-          </div>
-          <div class="rounded-xl2 border border-line dark:border-line-dark p-4 sm:p-5 bg-surface dark:bg-surface-dark">
-            <span class="text-xs sm:text-sm text-muted dark:text-muted-dark">Расходы за месяц</span>
-            <div class="text-xl sm:text-2xl font-semibold tabular-nums text-rose mt-1" id="fin-expense">0 Kč</div>
-          </div>
-          <div class="rounded-xl2 border border-line dark:border-line-dark p-4 sm:p-5 bg-surface dark:bg-surface-dark">
-            <span class="text-xs sm:text-sm text-muted dark:text-muted-dark">Чистый остаток</span>
-            <div class="text-xl sm:text-2xl font-semibold tabular-nums mt-1" id="fin-balance">0 Kč</div>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div class="rounded-xl2 border border-line dark:border-line-dark p-4 bg-surface dark:bg-surface-dark">
-            <h3 class="text-xs font-semibold text-muted dark:text-muted-dark mb-3">Расходы по категориям</h3>
-            <div class="relative h-48 flex items-center justify-center">
-              <canvas id="chart-categories"></canvas>
-            </div>
-          </div>
-          <div class="rounded-xl2 border border-line dark:border-line-dark p-4 bg-surface dark:bg-surface-dark">
-            <h3 class="text-xs font-semibold text-muted dark:text-muted-dark mb-3">Доходы vs Расходы</h3>
-            <div class="relative h-48 flex items-center justify-center">
-              <canvas id="chart-summary"></canvas>
-            </div>
-          </div>
-        </div>
-
-        <form id="finance-form" class="rounded-xl2 border border-line dark:border-line-dark p-3.5 sm:p-5 bg-surface dark:bg-surface-dark grid grid-cols-2 sm:grid-cols-6 gap-2.5 sm:gap-3">
-          <div>
-            <label class="block text-[11px] sm:text-xs text-muted dark:text-muted-dark mb-1">Сумма (Kč)</label>
-            <input required type="number" min="0" step="0.01" id="fin-amount" placeholder="0" class="w-full rounded-lg border border-line dark:border-line-dark bg-transparent px-2.5 py-1.5 sm:py-2 text-xs sm:text-sm ring-focus">
-          </div>
-          <div>
-            <label class="block text-[11px] sm:text-xs text-muted dark:text-muted-dark mb-1">Тип</label>
-            <select id="fin-type" class="w-full rounded-lg border border-line dark:border-line-dark bg-transparent px-2 py-1.5 sm:py-2 text-xs sm:text-sm ring-focus">
-              <option value="expense">Расход</option>
-              <option value="income">Доход</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-[11px] sm:text-xs text-muted dark:text-muted-dark mb-1">Категория</label>
-            <select id="fin-category" class="w-full rounded-lg border border-line dark:border-line-dark bg-transparent px-2 py-1.5 sm:py-2 text-xs sm:text-sm ring-focus"></select>
-          </div>
-          <div>
-            <label class="block text-[11px] sm:text-xs text-muted dark:text-muted-dark mb-1">Бюджет</label>
-            <select id="fin-shared" class="w-full rounded-lg border border-line dark:border-line-dark bg-transparent px-2 py-1.5 sm:py-2 text-xs sm:text-sm ring-focus">
-              <option value="shared" selected>👥 Семейный</option>
-              <option value="private">🔒 Личный</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-[11px] sm:text-xs text-muted dark:text-muted-dark mb-1">Дата</label>
-            <input required type="date" id="fin-date" class="w-full rounded-lg border border-line dark:border-line-dark bg-transparent px-2 py-1.5 sm:py-2 text-xs sm:text-sm ring-focus">
-          </div>
-          <div class="flex items-end col-span-2 sm:col-span-1">
-            <button type="submit" class="w-full rounded-lg bg-accent hover:bg-accent-dark text-white text-xs sm:text-sm font-medium py-2 transition-colors ring-focus">Добавить</button>
-          </div>
-        </form>
-
-        <div>
-          <h3 class="text-sm font-medium mb-2.5">Последние операции</h3>
-          <div id="finance-list" class="space-y-2"></div>
-        </div>
-      </section>
-
-      <!-- PIGGY BANK TAB -->
-      <section id="panel-piggy" class="tab-panel hidden space-y-4 sm:space-y-6">
-        <div>
-          <h1 class="text-xl sm:text-2xl font-semibold tracking-tight">Копилка и Накопления 🎯</h1>
-          <p class="text-xs sm:text-sm text-muted dark:text-muted-dark mt-0.5">Финансовые цели и совместные накопления</p>
-        </div>
-
-        <form id="piggy-form" class="rounded-xl2 border border-line dark:border-line-dark p-3.5 sm:p-5 bg-surface dark:bg-surface-dark grid grid-cols-1 sm:grid-cols-5 gap-2.5 sm:gap-3">
-          <div class="sm:col-span-2">
-            <label class="block text-[11px] sm:text-xs text-muted dark:text-muted-dark mb-1">На что копим?</label>
-            <input required type="text" id="piggy-title" placeholder="Например: Отпуск у моря" class="w-full rounded-lg border border-line dark:border-line-dark bg-transparent px-3 py-2 text-xs sm:text-sm ring-focus">
-          </div>
-          <div>
-            <label class="block text-[11px] sm:text-xs text-muted dark:text-muted-dark mb-1">Целевая сумма (Kč)</label>
-            <input required type="number" min="1" id="piggy-target" placeholder="50000" class="w-full rounded-lg border border-line dark:border-line-dark bg-transparent px-3 py-2 text-xs sm:text-sm ring-focus">
-          </div>
-          <div>
-            <label class="block text-[11px] sm:text-xs text-muted dark:text-muted-dark mb-1">Доступ</label>
-            <select id="piggy-shared" class="w-full rounded-lg border border-line dark:border-line-dark bg-transparent px-2 py-2 text-xs sm:text-sm ring-focus">
-              <option value="shared" selected>👥 Совместно</option>
-              <option value="private">🔒 Лично</option>
-            </select>
-          </div>
-          <div class="flex items-end">
-            <button type="submit" class="w-full py-2 rounded-lg bg-accent text-white font-medium text-xs sm:text-sm hover:bg-accent-dark transition-colors">Создать цель</button>
-          </div>
-        </form>
-
-        <div id="piggy-list" class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4"></div>
-      </section>
-
-      <!-- SHOPPING TAB -->
-      <section id="panel-shopping" class="tab-panel hidden space-y-4 sm:space-y-6">
-        <div>
-          <h1 class="text-xl sm:text-2xl font-semibold tracking-tight">Список покупок</h1>
-          <p class="text-xs sm:text-sm text-muted dark:text-muted-dark mt-0.5">Общий список товаров в магазин</p>
-        </div>
-
-        <form id="shopping-form" class="rounded-xl2 border border-line dark:border-line-dark p-3.5 sm:p-5 bg-surface dark:bg-surface-dark flex gap-2">
-          <input required type="text" id="shop-title" placeholder="Что нужно купить?..." class="flex-1 rounded-lg border border-line dark:border-line-dark bg-transparent px-3 py-2 text-xs sm:text-sm ring-focus">
-          <button type="submit" class="rounded-lg bg-accent hover:bg-accent-dark text-white text-xs sm:text-sm font-medium px-4 py-2 transition-colors ring-focus whitespace-nowrap">Добавить</button>
-        </form>
-
-        <div id="shopping-list" class="space-y-2"></div>
-      </section>
-
-      <!-- WISHLIST TAB -->
-      <section id="panel-wishlist" class="tab-panel hidden space-y-4 sm:space-y-6">
-        <div>
-          <h1 class="text-xl sm:text-2xl font-semibold tracking-tight">Вишлист 🎁</h1>
-          <p class="text-xs sm:text-sm text-muted dark:text-muted-dark mt-0.5">Список желаний и подарков</p>
-        </div>
-
-        <form id="wishlist-form" class="rounded-xl2 border border-line dark:border-line-dark p-3.5 sm:p-5 bg-surface dark:bg-surface-dark grid grid-cols-1 sm:grid-cols-6 gap-2.5 sm:gap-3">
-          <div class="sm:col-span-2">
-            <label class="block text-[11px] sm:text-xs text-muted dark:text-muted-dark mb-1">Название желания</label>
-            <input required type="text" id="wish-title" placeholder="Например: Наушники" class="w-full rounded-lg border border-line dark:border-line-dark bg-transparent px-3 py-2 text-xs sm:text-sm ring-focus">
-          </div>
-          <div>
-            <label class="block text-[11px] sm:text-xs text-muted dark:text-muted-dark mb-1">Цена (Kč)</label>
-            <input type="number" min="0" id="wish-price" placeholder="0" class="w-full rounded-lg border border-line dark:border-line-dark bg-transparent px-3 py-2 text-xs sm:text-sm ring-focus">
-          </div>
-          <div class="sm:col-span-2">
-            <label class="block text-[11px] sm:text-xs text-muted dark:text-muted-dark mb-1">Ссылка на сайт</label>
-            <input type="url" id="wish-link" placeholder="https://..." class="w-full rounded-lg border border-line dark:border-line-dark bg-transparent px-3 py-2 text-xs sm:text-sm ring-focus">
-          </div>
-          <div>
-            <label class="block text-[11px] sm:text-xs text-muted dark:text-muted-dark mb-1">Видимость</label>
-            <select id="wish-shared" class="w-full rounded-lg border border-line dark:border-line-dark bg-transparent px-2 py-2 text-xs sm:text-sm ring-focus">
-              <option value="shared" selected>👥 Для двоих</option>
-              <option value="private">🔒 Личное</option>
-            </select>
-          </div>
-          <div class="sm:col-span-6 flex justify-end">
-            <button type="submit" class="w-full sm:w-auto px-6 py-2 rounded-lg bg-accent text-white font-medium text-xs sm:text-sm hover:bg-accent-dark transition-colors">Добавить в вишлист</button>
-          </div>
-        </form>
-
-        <div id="wishlist-list" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
-      </section>
-
-    </main>
+      </main>
+    </div>
   </div>
-</div>
 
-<!-- Mobile Bottom Fixed Navigation Bar -->
-<nav class="md:hidden fixed bottom-0 inset-x-0 z-30 bg-surface/95 dark:bg-surface-dark/95 backdrop-blur border-t border-line dark:border-line-dark grid grid-cols-7 px-0.5 py-1" id="mobile-nav"></nav>
+  <!-- Mobile Bottom Navigation -->
+  <nav class="md:hidden fixed bottom-0 inset-x-0 z-30 bg-surface/95 dark:bg-surface-dark/95 backdrop-blur border-t border-line dark:border-line-dark grid grid-cols-7 px-0.5 py-1" id="mobile-nav"></nav>
+</div>
 
 <!-- FIREBASE SDKs -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -515,6 +664,13 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 var auth = firebase.auth();
 var db = firebase.firestore();
+
+/* ============================= APP SWITCHER ============================= */
+function launchApp() {
+  document.getElementById('landing-view').classList.add('hidden');
+  document.getElementById('app-view').classList.remove('hidden');
+  lucide.createIcons();
+}
 
 /* ============================= STATE ============================= */
 const TABS = [
@@ -645,7 +801,6 @@ function checkTaskNotifications() {
 
   state.tasks.forEach(t => {
     if (t.date === todayS && !t.done && t.start) {
-      // Нормализуем время к формату "HH:MM"
       let timeParts = t.start.split(':');
       if (timeParts.length < 2) return;
       let h = parseInt(timeParts[0], 10);
@@ -654,11 +809,9 @@ function checkTaskNotifications() {
       const taskTime = new Date();
       taskTime.setHours(h, m, 0, 0);
 
-      // Разница в минутах между временем задачи и текущим временем
       const diffMs = taskTime.getTime() - now.getTime();
       const diffMinutes = Math.floor(diffMs / 60000);
 
-      // Уведомление за 30 минут (интервал от 28 до 30 минут)
       if (diffMinutes >= 28 && diffMinutes <= 30 && !notifiedTaskIds.has(`${t.id}_30`)) {
         notifiedTaskIds.add(`${t.id}_30`);
         new Notification("Напоминание ⏳ (через 30 мин)", {
@@ -667,7 +820,6 @@ function checkTaskNotifications() {
         });
       }
 
-      // Уведомление за 15 минут (интервал от 13 до 15 минут)
       if (diffMinutes >= 13 && diffMinutes <= 15 && !notifiedTaskIds.has(`${t.id}_15`)) {
         notifiedTaskIds.add(`${t.id}_15`);
         new Notification("Скоро задача! ⏰ (через 15 мин)", {
@@ -676,7 +828,6 @@ function checkTaskNotifications() {
         });
       }
 
-      // Уведомление в момент начала (интервал от -1 до 1 минуты)
       if (diffMinutes >= -1 && diffMinutes <= 1 && !notifiedTaskIds.has(`${t.id}_now`)) {
         notifiedTaskIds.add(`${t.id}_now`);
         new Notification("Время задачи! 🎯", {
@@ -688,7 +839,6 @@ function checkTaskNotifications() {
   });
 }
 
-// Проверяем задачи каждые 20 секунд
 setInterval(checkTaskNotifications, 20000);
 
 /* ============================= AUTH ============================= */
@@ -1512,7 +1662,6 @@ function renderOverview() {
   const ovDate = document.getElementById('overview-date');
   if (ovDate) ovDate.textContent = capitalize(formatRuDate(new Date()));
 
-  // Tasks overview
   const todaysTasks = state.tasks.filter(t => taskOccursOnDate(t, todayS));
   const doneTasks = todaysTasks.filter(t => t.done).length;
   const tPct = todaysTasks.length ? Math.round((doneTasks / todaysTasks.length) * 100) : 0;
@@ -1520,14 +1669,12 @@ function renderOverview() {
   document.getElementById('ov-task-count').textContent = `${doneTasks} из ${todaysTasks.length}`;
   document.getElementById('ov-task-bar').style.width = tPct + '%';
 
-  // Habits overview
   const doneHabits = state.habits.filter(h => h.completions && h.completions[todayS]).length;
   const hPct = state.habits.length ? Math.round((doneHabits / state.habits.length) * 100) : 0;
   document.getElementById('ov-habit-pct').textContent = hPct + '%';
   document.getElementById('ov-habit-count').textContent = `${doneHabits} из ${state.habits.length}`;
   document.getElementById('ov-habit-bar').style.width = hPct + '%';
 
-  // Finance overview
   const todaysSpent = state.finance.filter(t => t.date === todayS && t.type === 'expense').reduce((s,t) => s + t.amount, 0);
   document.getElementById('ov-spend-today').textContent = money(todaysSpent);
 }
@@ -1566,8 +1713,7 @@ function init() {
   if (document.getElementById('fin-date')) document.getElementById('fin-date').value = todayStr();
   if (document.getElementById('task-date')) document.getElementById('task-date').value = scheduleDate;
 
-  const savedTheme = localStorage.getItem('cd_theme') || 
-    (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  const savedTheme = localStorage.getItem('cd_theme') || 'dark';
   applyTheme(savedTheme);
 
   const themeBtn = document.getElementById('theme-toggle');
