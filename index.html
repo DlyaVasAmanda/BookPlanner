@@ -410,80 +410,11 @@
         <div id="habit-list" class="space-y-3"></div>
       </section>
 
-      <!-- FINANCE TAB -->
-      <section id="panel-finance" class="tab-panel hidden space-y-6">
-        <div>
-          <h1 class="text-2xl sm:text-4xl font-extrabold tracking-tight">Семейный бюджет</h1>
-          <p class="text-xs sm:text-sm text-slate-400 mt-1">Аналитика расходов и доходов в кронах (Kč)</p>
-        </div>
+      <!-- FINANCE TAB (family budget; markup built in initFinance) -->
+      <section id="panel-finance" class="tab-panel hidden space-y-6"></section>
 
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div class="glass-card rounded-2xl p-5">
-            <span class="text-xs font-medium text-slate-400">Доходы за месяц</span>
-            <div class="text-2xl sm:text-3xl font-extrabold tabular-nums text-emerald mt-2" id="fin-income">0 Kč</div>
-          </div>
-          <div class="glass-card rounded-2xl p-5">
-            <span class="text-xs font-medium text-slate-400">Расходы за месяц</span>
-            <div class="text-2xl sm:text-3xl font-extrabold tabular-nums text-rose mt-2" id="fin-expense">0 Kč</div>
-          </div>
-          <div class="glass-card rounded-2xl p-5">
-            <span class="text-xs font-medium text-slate-400">Чистый остаток</span>
-            <div class="text-2xl sm:text-3xl font-extrabold tabular-nums mt-2" id="fin-balance">0 Kč</div>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div class="glass-card rounded-2xl p-5">
-            <h3 class="text-xs font-bold text-slate-400 mb-4">Расходы по категориям</h3>
-            <div class="relative h-52 flex items-center justify-center">
-              <canvas id="chart-categories"></canvas>
-            </div>
-          </div>
-          <div class="glass-card rounded-2xl p-5">
-            <h3 class="text-xs font-bold text-slate-400 mb-4">Доходы vs Расходы</h3>
-            <div class="relative h-52 flex items-center justify-center">
-              <canvas id="chart-summary"></canvas>
-            </div>
-          </div>
-        </div>
-
-        <form id="finance-form" class="glass-card rounded-2xl p-5 grid grid-cols-2 sm:grid-cols-6 gap-3">
-          <div>
-            <label class="block text-xs font-medium text-slate-400 mb-1">Сумма (Kč)</label>
-            <input required type="number" min="0" step="0.01" id="fin-amount" placeholder="0" class="w-full rounded-xl glass-input px-3 py-2 text-xs">
-          </div>
-          <div>
-            <label class="block text-xs font-medium text-slate-400 mb-1">Тип</label>
-            <select id="fin-type" class="w-full rounded-xl glass-input px-2.5 py-2 text-xs">
-              <option value="expense" class="bg-dark-surface">Расход</option>
-              <option value="income" class="bg-dark-surface">Доход</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-xs font-medium text-slate-400 mb-1">Категория</label>
-            <select id="fin-category" class="w-full rounded-xl glass-input px-2.5 py-2 text-xs"></select>
-          </div>
-          <div>
-            <label class="block text-xs font-medium text-slate-400 mb-1">Бюджет</label>
-            <select id="fin-shared" class="w-full rounded-xl glass-input px-2.5 py-2 text-xs">
-              <option value="shared" selected class="bg-dark-surface">👥 Семейный</option>
-              <option value="private" class="bg-dark-surface">🔒 Личный</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-xs font-medium text-slate-400 mb-1">Дата</label>
-            <input required type="date" id="fin-date" class="w-full rounded-xl glass-input px-2.5 py-2 text-xs">
-          </div>
-          <div class="flex items-end col-span-2 sm:col-span-1">
-            <button type="submit" class="w-full rounded-xl bg-brand hover:bg-brand-hover text-white text-xs font-semibold py-2.5 transition-all shadow-md shadow-blue-600/30">Добавить</button>
-          </div>
-        </form>
-
-        <div>
-          <h3 class="text-sm font-bold mb-3">Последние операции</h3>
-          <div id="finance-list" class="space-y-2.5"></div>
-        </div>
-      </section>
+      <!-- PERSONAL EXPENSES TAB (markup built in initFinance) -->
+      <section id="panel-personal" class="tab-panel hidden space-y-6"></section>
 
       <!-- PIGGY BANK TAB -->
       <section id="panel-piggy" class="tab-panel hidden space-y-6">
@@ -571,7 +502,7 @@
 </div>
 
 <!-- Mobile Navigation -->
-<nav class="md:hidden fixed bottom-0 inset-x-0 z-30 glass-card border-t border-white/10 grid grid-cols-7 px-1 py-1.5" id="mobile-nav"></nav>
+<nav class="md:hidden fixed bottom-0 inset-x-0 z-30 glass-card border-t border-white/10 flex overflow-x-auto px-1 py-1.5" id="mobile-nav"></nav>
 
 <!-- FIREBASE SDKs -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -599,6 +530,7 @@ const TABS = [
   { id: 'schedule', label: 'Календарь', icon: 'calendar-clock' },
   { id: 'habits', label: 'Привычки', icon: 'flame' },
   { id: 'finance', label: 'Расходы', icon: 'wallet' },
+  { id: 'personal', label: 'Личные', icon: 'user-round' },
   { id: 'piggy', label: 'Копилка', icon: 'target' },
   { id: 'shopping', label: 'Покупки', icon: 'shopping-cart' },
   { id: 'wishlist', label: 'Вишлист', icon: 'gift' }
@@ -856,7 +788,7 @@ function renderNav() {
     sidebar.appendChild(btn);
 
     const mbtn = document.createElement('button');
-    mbtn.className = `flex flex-col items-center justify-center gap-1 py-1 text-[9px] leading-tight ${active ? 'text-brand font-semibold' : 'text-slate-400'}`;
+    mbtn.className = `flex flex-col items-center justify-center gap-1 py-1 min-w-[58px] flex-1 shrink-0 text-[9px] leading-tight ${active ? 'text-brand font-semibold' : 'text-slate-400'}`;
     mbtn.innerHTML = `<i data-lucide="${tab.icon}" class="w-4 h-4"></i><span class="truncate w-full text-center">${tab.label}</span>`;
     mbtn.onclick = () => setTab(tab.id);
     mobile.appendChild(mbtn);
@@ -1800,115 +1732,410 @@ function renderHabits() {
   });
 }
 
-/* ============================= FINANCE & CHARTS ============================= */
-function populateCategories() {
-  const sel = document.getElementById('fin-category');
-  if (sel) sel.innerHTML = CATEGORIES.map(c => `<option value="${c}" class="bg-dark-surface">${c}</option>`).join('');
+/* ============================= FINANCE (weekly: family + personal) ============================= */
+// 'need' = обязательные траты, 'flex' = необязательные (здесь ищем экономию)
+const EXPENSE_CATS = [
+  ['Продукты', 'need'], ['Жильё', 'need'], ['Транспорт', 'need'], ['Здоровье', 'need'],
+  ['Кафе и Еда', 'flex'], ['Развлечения', 'flex'], ['Одежда', 'flex'], ['Подписки', 'flex'], ['Подарки', 'flex'], ['Прочее', 'flex']
+];
+const INCOME_CATS = ['Зарплата', 'Подработка', 'Подарок', 'Прочее'];
+const CAT_KIND = Object.fromEntries(EXPENSE_CATS);
+const CAT_COLORS = ['#2563EB', '#F43F5E', '#F59E0B', '#10B981', '#8B5CF6', '#06B6D4', '#EC4899', '#64748B', '#84CC16', '#F97316'];
+const FIN_SCOPES = {
+  family: {
+    panel: 'panel-finance', tab: 'finance', shared: true,
+    title: 'Семейный бюджет', sub: 'Общие вложения и траты пары. Каждый понедельник неделя начинается с нуля, история остаётся.',
+    inLabel: 'Вложено в бюджет', outLabel: 'Потрачено', formHint: 'Запись попадёт в общий бюджет и будет видна партнёру.'
+  },
+  personal: {
+    panel: 'panel-personal', tab: 'personal', shared: false,
+    title: 'Личные расходы', sub: 'Видно только вам. Неделя тоже обнуляется по понедельникам, история остаётся.',
+    inLabel: 'Доходы', outLabel: 'Потрачено', formHint: 'Запись видите только вы.'
+  }
+};
+const finWeekSel = { family: null, personal: null };   // null = «текущая неделя» (сама переключается в понедельник)
+const finCharts = {};
+
+const finWs = (scope) => finWeekSel[scope] || weekStart(todayStr());
+const finIn = (t, ws) => t.date >= ws && t.date <= addDays(ws, 6);
+const finAmt = (t) => Number(t.amount) || 0;
+const finSum = (arr) => arr.reduce((s, t) => s + finAmt(t), 0);
+function finRecs(scope) {
+  return state.finance.filter((t) => scope === 'family' ? !!t.shared : (!t.shared && t.userId === currentUser.uid));
+}
+function finGroup(arr, key) {
+  const m = {};
+  arr.forEach((t) => { const k = t[key] || 'Прочее'; m[k] = (m[k] || 0) + finAmt(t); });
+  return m;
+}
+function finMyName() { return currentUser && currentUser.email ? currentUser.email.split('@')[0] : 'Вы'; }
+function finAuthor(t) {
+  const id = t.createdById || (t.shared ? '' : t.userId) || '';
+  const name = t.authorName || (id && currentUser && id === currentUser.uid ? finMyName() : 'Не указан');
+  return { id, name };
+}
+function finWeekLabel(ws) {
+  const a = parseDate(ws), b = parseDate(addDays(ws, 6));
+  const mon = (d) => d.toLocaleDateString('ru-RU', { month: 'short' }).replace('.', '');
+  return `${a.getDate()} ${a.getMonth() === b.getMonth() ? '' : mon(a) + ' '}– ${b.getDate()} ${mon(b)} ${b.getFullYear()}`.replace('  ', ' ');
+}
+function pct(n, d) { return d > 0 ? Math.round(n / d * 100) : 0; }
+
+/* ---- analytics: where the money goes / where to save (rule-based, not a forecast) ---- */
+function finAnalyze(recs, ws) {
+  const exp = (w) => recs.filter((t) => t.type !== 'income' && finIn(t, w));
+  const cur = exp(ws);
+  const prev = exp(addDays(ws, -7));
+  const total = finSum(cur), prevTotal = finSum(prev);
+  const byCat = finGroup(cur, 'category');
+  const prevBy = finGroup(prev, 'category');
+  const cats = Object.entries(byCat).sort((a, b) => b[1] - a[1]);
+
+  // average of up to 4 earlier weeks that actually have expenses
+  const priorWeeks = [2, 3, 4, 5].map((i) => exp(addDays(ws, -7 * i))).filter((w) => w.length);
+  const avgBy = {};
+  priorWeeks.forEach((w) => { Object.entries(finGroup(w, 'category')).forEach(([c, v]) => { avgBy[c] = (avgBy[c] || 0) + v / priorWeeks.length; }); });
+
+  const flexTotal = cats.reduce((s, [c, v]) => s + (CAT_KIND[c] === 'need' ? 0 : v), 0);
+  const tips = [];
+  if (!cur.length) return { total, prevTotal, cats, prevBy, flexTotal, tips, saving: 0 };
+
+  const [topName, topVal] = cats[0];
+  const top3 = cats.slice(0, 3).reduce((s, [, v]) => s + v, 0);
+  tips.push({ tone: 'info', icon: '📊', text: `Больше всего уходит на «${topName}» — ${pct(topVal, total)}% (${money(topVal)}).${cats.length > 3 ? ` Три главные статьи вместе — ${pct(top3, total)}% всех трат.` : ''}` });
+
+  if (prevTotal > 0) {
+    const d = total - prevTotal;
+    if (Math.abs(d) >= 50) tips.push({ tone: d > 0 ? 'warn' : 'good', icon: d > 0 ? '📈' : '📉', text: `Всего ${d > 0 ? 'больше' : 'меньше'} прошлой недели на ${money(Math.abs(d))} (${d > 0 ? '+' : '−'}${pct(Math.abs(d), prevTotal)}%).` });
+  }
+  const used = new Set();
+  cats.forEach(([c, v]) => {
+    const p = prevBy[c] || 0;
+    if (used.size >= 3) return;
+    if (p > 0 && v - p >= 100 && v / p >= 1.25) { used.add(c); tips.push({ tone: 'warn', icon: '⚠️', text: `«${c}» выросли на ${pct(v - p, p)}% (+${money(v - p)}) к прошлой неделе.` }); }
+    else if (p === 0 && v >= 200 && CAT_KIND[c] !== 'need') { used.add(c); tips.push({ tone: 'warn', icon: '🆕', text: `Новая статья «${c}» — ${money(v)}; на прошлой неделе её не было.` }); }
+  });
+  cats.forEach(([c, v]) => {
+    const a = avgBy[c];
+    if (!used.has(c) && a && v > a * 1.3 && v - a >= 150 && used.size < 4) { used.add(c); tips.push({ tone: 'warn', icon: '⚠️', text: `«${c}»: на ${money(v - a)} выше вашей обычной недели (в среднем ${money(a)}).` }); }
+  });
+
+  const flexRecs = cur.filter((t) => CAT_KIND[t.category] !== 'need').sort((a, b) => finAmt(b) - finAmt(a));
+  if (flexRecs.length && finAmt(flexRecs[0]) >= total * 0.1 && finAmt(flexRecs[0]) >= 150) {
+    const t = flexRecs[0];
+    tips.push({ tone: 'info', icon: '🔎', text: `Крупнейшая необязательная трата: ${t.note ? '«' + t.note + '»' : '«' + (t.category || 'Прочее') + '»'} — ${money(finAmt(t))} (${t.date.slice(8)}.${t.date.slice(5, 7)}).` });
+  }
+  const saving = Math.round(flexTotal * 0.2);
+  if (flexTotal > 0) {
+    tips.push({ tone: 'good', icon: '💡', text: `Необязательные траты (кафе, развлечения, одежда, подписки, подарки, прочее) — ${money(flexTotal)}, это ${pct(flexTotal, total)}%. Если сократить их на 20%, выйдет около ${money(saving)} в неделю, примерно ${money(Math.round(saving * 52 / 12))} в месяц.` });
+  }
+  return { total, prevTotal, cats, prevBy, flexTotal, tips, saving };
 }
 
-document.getElementById('finance-form').onsubmit = async (e) => {
-  e.preventDefault();
-  const amount = parseFloat(document.getElementById('fin-amount').value);
-  const isShared = document.getElementById('fin-shared').value === 'shared';
-  await db.collection('finance').add({
-    userId: isShared ? `couple_${coupleCode}` : currentUser.uid,
-    amount,
-    type: document.getElementById('fin-type').value,
-    category: document.getElementById('fin-category').value,
-    shared: isShared,
-    date: document.getElementById('fin-date').value || todayStr()
+/* ---- panel markup (one template for both tabs) ---- */
+function buildFinPanel(scope) {
+  const cfg = FIN_SCOPES[scope], p = scope;
+  const people = scope === 'family' ? `
+    <div>
+      <h3 class="text-sm font-bold mb-3">Кто сколько вложил и потратил</h3>
+      <div id="${p}-people" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+    </div>` : '';
+  document.getElementById(cfg.panel).innerHTML = `
+    <div class="flex flex-wrap items-end justify-between gap-3">
+      <div>
+        <h1 class="text-2xl sm:text-4xl font-extrabold tracking-tight">${cfg.title}</h1>
+        <p class="text-xs sm:text-sm text-slate-400 mt-1 max-w-xl">${cfg.sub}</p>
+      </div>
+      <div class="flex items-center gap-1.5">
+        <button type="button" id="${p}-prev" aria-label="Прошлая неделя" class="p-2 rounded-full hover:bg-white/10 transition-all"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+        <div class="text-center min-w-[150px]">
+          <div id="${p}-week" class="text-sm font-semibold"></div>
+          <div id="${p}-week-tag" class="text-[10px] text-slate-400"></div>
+        </div>
+        <button type="button" id="${p}-next" aria-label="Следующая неделя" class="p-2 rounded-full hover:bg-white/10 transition-all disabled:opacity-30"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+        <button type="button" id="${p}-now" class="ml-1 px-3 py-1.5 rounded-xl border border-white/10 hover:bg-white/5 text-xs font-semibold transition-all">Эта неделя</button>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div class="glass-card rounded-2xl p-5">
+        <span class="text-xs font-medium text-slate-400">${cfg.inLabel}</span>
+        <div class="text-2xl sm:text-3xl font-extrabold tabular-nums text-emerald mt-2" id="${p}-income">0 Kč</div>
+      </div>
+      <div class="glass-card rounded-2xl p-5">
+        <span class="text-xs font-medium text-slate-400">${cfg.outLabel}</span>
+        <div class="text-2xl sm:text-3xl font-extrabold tabular-nums text-rose mt-2" id="${p}-expense">0 Kč</div>
+        <div class="text-[11px] text-slate-500 mt-1" id="${p}-expense-delta"></div>
+      </div>
+      <div class="glass-card rounded-2xl p-5">
+        <span class="text-xs font-medium text-slate-400">Остаток недели</span>
+        <div class="text-2xl sm:text-3xl font-extrabold tabular-nums mt-2" id="${p}-balance">0 Kč</div>
+        <div class="text-[11px] text-slate-500 mt-1" id="${p}-balance-note">в новую неделю не переносится</div>
+      </div>
+    </div>
+
+    ${people}
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div class="glass-card rounded-2xl p-5">
+        <h3 class="text-sm font-bold mb-4">На что уходит больше всего</h3>
+        <div id="${p}-cats" class="space-y-3"></div>
+      </div>
+      <div class="glass-card rounded-2xl p-5">
+        <h3 class="text-sm font-bold mb-1">Где можно сэкономить</h3>
+        <p class="text-[11px] text-slate-500 mb-3">Подсказки считаются по правилам из ваших записей (рост к прошлой неделе, доля необязательных трат), это не прогноз.</p>
+        <div id="${p}-tips" class="space-y-2.5"></div>
+      </div>
+    </div>
+
+    <div class="glass-card rounded-2xl p-5">
+      <h3 class="text-sm font-bold mb-4">Последние 8 недель</h3>
+      <div class="relative h-52"><canvas id="${p}-chart"></canvas></div>
+    </div>
+
+    <form id="${p}-form" class="glass-card rounded-2xl p-5 grid grid-cols-2 sm:grid-cols-6 gap-3">
+      <div>
+        <label class="block text-xs font-medium text-slate-400 mb-1" for="${p}-amount">Сумма (Kč)</label>
+        <input required type="number" min="0.01" step="0.01" inputmode="decimal" id="${p}-amount" placeholder="0" class="w-full rounded-xl glass-input px-3 py-2 text-xs">
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-400 mb-1" for="${p}-type">Тип</label>
+        <select id="${p}-type" class="w-full rounded-xl glass-input px-2.5 py-2 text-xs">
+          <option value="expense" class="bg-dark-surface">Расход</option>
+          <option value="income" class="bg-dark-surface">${scope === 'family' ? 'Вложение' : 'Доход'}</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-400 mb-1" for="${p}-category">Категория</label>
+        <select id="${p}-category" class="w-full rounded-xl glass-input px-2.5 py-2 text-xs"></select>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-400 mb-1" for="${p}-date">Дата</label>
+        <input required type="date" id="${p}-date" class="w-full rounded-xl glass-input px-2.5 py-2 text-xs">
+      </div>
+      <div class="col-span-2">
+        <label class="block text-xs font-medium text-slate-400 mb-1" for="${p}-note">На что именно (необязательно)</label>
+        <input type="text" maxlength="80" id="${p}-note" placeholder="Например: Albert, молоко и хлеб" autocomplete="off" class="w-full rounded-xl glass-input px-3 py-2 text-xs">
+      </div>
+      <div class="col-span-2 sm:col-span-6 flex items-center justify-between gap-3">
+        <span class="text-[11px] text-slate-500">${cfg.formHint}</span>
+        <button type="submit" class="rounded-xl bg-brand hover:bg-brand-hover text-white text-xs font-semibold px-6 py-2.5 transition-all shadow-md shadow-blue-600/30">Добавить</button>
+      </div>
+    </form>
+
+    <div>
+      <h3 class="text-sm font-bold mb-3">Операции недели</h3>
+      <div id="${p}-list" class="space-y-2.5"></div>
+    </div>`;
+  fillFinCategories(scope);
+  document.getElementById(`${p}-date`).value = todayStr();
+}
+
+function fillFinCategories(scope) {
+  const type = document.getElementById(`${scope}-type`).value;
+  const names = type === 'income' ? INCOME_CATS : EXPENSE_CATS.map((c) => c[0]);
+  document.getElementById(`${scope}-category`).innerHTML = names.map((c) => `<option value="${c}" class="bg-dark-surface">${c}</option>`).join('');
+}
+
+function initFinance() {
+  Object.keys(FIN_SCOPES).forEach((scope) => {
+    buildFinPanel(scope);
+    const $s = (s) => document.getElementById(`${scope}-${s}`);
+    $s('type').onchange = () => fillFinCategories(scope);
+    $s('prev').onclick = () => { finWeekSel[scope] = addDays(finWs(scope), -7); renderFinance(); };
+    $s('next').onclick = () => {
+      const n = addDays(finWs(scope), 7);
+      finWeekSel[scope] = n >= weekStart(todayStr()) ? null : n;
+      renderFinance();
+    };
+    $s('now').onclick = () => { finWeekSel[scope] = null; renderFinance(); };
+    $s('form').onsubmit = (e) => submitFinance(e, scope);
   });
-  document.getElementById('finance-form').reset();
-  document.getElementById('fin-date').value = todayStr();
-};
+}
 
+async function submitFinance(e, scope) {
+  e.preventDefault();
+  if (!currentUser) return;
+  const cfg = FIN_SCOPES[scope];
+  const $s = (s) => document.getElementById(`${scope}-${s}`);
+  const amount = parseFloat($s('amount').value);
+  if (!(amount > 0)) { showToast('Введите сумму больше нуля'); return; }
+  if (cfg.shared && !coupleCode) { showToast('Для общего бюджета сначала задайте код пары (слева)'); return; }
+  const date = $s('date').value || todayStr();
+  try {
+    await db.collection('finance').add({
+      userId: cfg.shared ? `couple_${coupleCode}` : currentUser.uid,
+      amount,
+      type: $s('type').value,
+      category: $s('category').value,
+      note: $s('note').value.trim(),
+      shared: cfg.shared,
+      date,
+      createdById: currentUser.uid,
+      authorName: finMyName()
+    });
+  } catch (err) { console.error(err); alert('Не удалось сохранить: ' + err.message); return; }
+  $s('amount').value = '';
+  $s('note').value = '';
+  $s('date').value = todayStr();
+  const ws = weekStart(date);
+  finWeekSel[scope] = ws === weekStart(todayStr()) ? null : ws;   // show the week where the record landed
+  renderFinance();
+  showToast('Запись добавлена');
+}
+
+/* ---- render ---- */
 function renderFinance() {
-  let income = 0, expense = 0;
-  const list = document.getElementById('finance-list');
-  if (!list) return;
-  list.innerHTML = '';
+  Object.keys(FIN_SCOPES).forEach((scope) => {
+    if (state.activeTab === FIN_SCOPES[scope].tab) renderFinScope(scope);
+  });
+}
 
-  const catTotals = {};
+function renderFinScope(scope) {
+  const cfg = FIN_SCOPES[scope], p = scope;
+  const el = (s) => document.getElementById(`${p}-${s}`);
+  if (!el('list')) return;
+  const recs = finRecs(scope);
+  const ws = finWs(scope);
+  const isNow = ws === weekStart(todayStr());
+  const week = recs.filter((t) => finIn(t, ws));
+  const incRecs = week.filter((t) => t.type === 'income');
+  const expRecs = week.filter((t) => t.type !== 'income');
+  const income = finSum(incRecs), expense = finSum(expRecs);
+  const balance = income - expense;
+  const an = finAnalyze(recs, ws);
 
-  state.finance.forEach(t => {
-    if (t.type === 'income') {
-      income += t.amount;
-    } else {
-      expense += t.amount;
-      catTotals[t.category] = (catTotals[t.category] || 0) + t.amount;
-    }
+  el('week').textContent = finWeekLabel(ws);
+  el('week-tag').textContent = isNow ? 'идёт сейчас' : 'архив';
+  el('next').disabled = isNow;
+  el('now').classList.toggle('opacity-40', isNow);
+  el('income').textContent = money(income);
+  el('expense').textContent = money(expense);
+  const dTxt = an.prevTotal > 0 ? `${expense >= an.prevTotal ? '▲' : '▼'} ${pct(Math.abs(expense - an.prevTotal), an.prevTotal)}% к прошлой неделе (${money(an.prevTotal)})` : 'на прошлой неделе трат не было';
+  el('expense-delta').textContent = dTxt;
+  el('balance').textContent = money(balance);
+  el('balance').className = 'text-2xl sm:text-3xl font-extrabold tabular-nums mt-2 ' + (balance < 0 ? 'text-rose' : balance > 0 ? 'text-emerald' : '');
+  el('balance-note').textContent = balance < 0 ? 'перерасход: потратили больше, чем вложили' : 'в новую неделю не переносится';
 
+  if (scope === 'family') renderFinPeople(recs, ws, income);
+  renderFinCats(el('cats'), an, expense);
+  renderFinTips(el('tips'), an);
+  renderFinList(el('list'), week);
+  renderFinHistory(scope, recs, ws);
+  lucide.createIcons();
+}
+
+function renderFinPeople(recs, ws, totalIncome) {
+  const box = document.getElementById('family-people');
+  if (!box) return;
+  const people = {};
+  const ensure = (a) => { const k = a.id || '_'; if (!people[k]) people[k] = { id: a.id, name: a.name, income: 0, expense: 0, cats: {} }; if (a.name !== 'Не указан') people[k].name = a.name; return people[k]; };
+  ensure({ id: currentUser.uid, name: finMyName() });
+  recs.forEach((t) => ensure(finAuthor(t)));                      // everyone who ever wrote to the budget is listed
+  recs.filter((t) => finIn(t, ws)).forEach((t) => {
+    const r = ensure(finAuthor(t));
+    if (t.type === 'income') r.income += finAmt(t);
+    else { r.expense += finAmt(t); r.cats[t.category || 'Прочее'] = (r.cats[t.category || 'Прочее'] || 0) + finAmt(t); }
+  });
+  const list = Object.values(people).sort((a, b) => (b.id === currentUser.uid) - (a.id === currentUser.uid) || b.income - a.income);
+  box.innerHTML = list.map((r) => {
+    const cats = Object.entries(r.cats).sort((a, b) => b[1] - a[1]).slice(0, 4);
+    const max = cats.length ? cats[0][1] : 1;
+    const me = r.id === currentUser.uid;
+    return `<div class="glass-card rounded-2xl p-4">
+      <div class="flex items-center justify-between gap-2">
+        <span class="font-semibold text-sm truncate">${esc(r.name)}${me ? ' <span class="text-[10px] px-1.5 py-0.5 rounded-md bg-brand/10 text-brand font-semibold align-middle">вы</span>' : ''}</span>
+        <span class="text-[11px] text-slate-400 shrink-0">${totalIncome > 0 ? pct(r.income, totalIncome) + '% вклада' : 'вкладов нет'}</span>
+      </div>
+      <div class="grid grid-cols-2 gap-3 mt-3">
+        <div><div class="text-[11px] text-slate-400">Вложил</div><div class="text-lg font-bold tabular-nums text-emerald">${money(r.income)}</div></div>
+        <div><div class="text-[11px] text-slate-400">Потратил</div><div class="text-lg font-bold tabular-nums text-rose">${money(r.expense)}</div></div>
+      </div>
+      <div class="mt-3 pt-3 border-t border-white/10 space-y-1.5">
+        ${cats.length ? cats.map(([c, v]) => `<div class="flex items-center gap-2 text-[11px]">
+            <span class="w-24 truncate text-slate-300">${esc(c)}</span>
+            <span class="flex-1 h-1.5 rounded-full bg-white/5 overflow-hidden"><span class="block h-full rounded-full bg-rose/70" style="width:${Math.max(4, Math.round(v / max * 100))}%"></span></span>
+            <span class="tabular-nums text-slate-300 w-20 text-right">${money(v)}</span>
+          </div>`).join('') : '<p class="text-[11px] text-slate-500">Трат на этой неделе нет</p>'}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderFinCats(box, an, expense) {
+  if (!an.cats.length) { box.innerHTML = '<p class="text-xs text-slate-500">На этой неделе расходов нет.</p>'; return; }
+  const max = an.cats[0][1];
+  box.innerHTML = an.cats.map(([c, v], i) => {
+    const prev = an.prevBy[c] || 0;
+    let delta = '';
+    if (prev > 0) { const d = v - prev; if (Math.abs(d) >= 1) delta = `<span class="${d > 0 ? 'text-rose' : 'text-emerald'}">${d > 0 ? '▲' : '▼'} ${pct(Math.abs(d), prev)}%</span>`; }
+    else delta = '<span class="text-slate-500" title="На прошлой неделе трат в этой категории не было">—</span>';
+    const kind = CAT_KIND[c] === 'need' ? 'обязательная' : 'необязательная';
+    return `<div>
+      <div class="flex items-center justify-between text-xs mb-1 gap-2">
+        <span class="font-medium truncate">${esc(c)} <span class="text-[10px] text-slate-500 font-normal">· ${kind}</span></span>
+        <span class="tabular-nums shrink-0">${money(v)} <span class="text-slate-400">· ${pct(v, expense)}%</span></span>
+      </div>
+      <div class="flex items-center gap-2">
+        <div class="flex-1 h-2 rounded-full bg-white/5 overflow-hidden"><div class="h-full rounded-full" style="width:${Math.max(3, Math.round(v / max * 100))}%;background:${CAT_COLORS[i % CAT_COLORS.length]}"></div></div>
+        <span class="text-[10px] w-14 text-right">${delta}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderFinTips(box, an) {
+  if (!an.tips.length) { box.innerHTML = '<p class="text-xs text-slate-500">Добавьте расходы за неделю, и здесь появятся выводы.</p>'; return; }
+  const tone = { warn: 'border-amber/40 bg-amber/5', good: 'border-emerald/40 bg-emerald/5', info: 'border-white/10 bg-white/[0.03]' };
+  box.innerHTML = an.tips.map((t) => `<div class="flex gap-2.5 p-3 rounded-xl border text-xs leading-relaxed ${tone[t.tone] || tone.info}"><span class="shrink-0">${t.icon}</span><span>${esc(t.text)}</span></div>`).join('');
+}
+
+function renderFinList(box, week) {
+  box.innerHTML = '';
+  if (!week.length) { box.innerHTML = '<p class="text-xs text-slate-500">Операций за эту неделю нет.</p>'; return; }
+  week.slice().sort((a, b) => (b.date || '').localeCompare(a.date || '')).forEach((t) => {
+    const inc = t.type === 'income';
+    const a = finAuthor(t);
     const row = document.createElement('div');
-    row.className = 'flex items-center justify-between p-3 rounded-xl glass-card text-xs sm:text-sm';
+    row.className = 'flex items-center justify-between gap-3 p-3 rounded-xl glass-card text-xs sm:text-sm';
     row.innerHTML = `
-      <div class="flex items-center gap-3">
-        <span class="text-xs px-2 py-0.5 rounded-md font-semibold ${t.type === 'income' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}">${t.type === 'income' ? '+' : '-'}</span>
-        <div>
-          <p class="font-medium text-xs">${t.shared ? '👥' : '🔒'} ${t.category}</p>
-          <p class="text-[10px] text-slate-500 font-mono">${t.date}</p>
+      <div class="flex items-center gap-3 min-w-0">
+        <span class="text-xs px-2 py-0.5 rounded-md font-semibold shrink-0 ${inc ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}">${inc ? '+' : '−'}</span>
+        <div class="min-w-0">
+          <p class="font-medium text-xs truncate">${esc(t.category || 'Прочее')}${t.note ? ` <span class="text-slate-400 font-normal">· ${esc(t.note)}</span>` : ''}</p>
+          <p class="text-[10px] text-slate-500 font-mono">${esc(t.date)}${t.shared ? ' · ' + esc(a.name) : ''}</p>
         </div>
       </div>
-      <div class="flex items-center gap-3">
-        <span class="font-semibold tabular-nums ${t.type === 'income' ? 'text-emerald-400' : 'text-rose-400'}">${money(t.amount)}</span>
-        <button class="f-del text-xs text-rose p-1">×</button>
-      </div>
-    `;
-    row.querySelector('.f-del').onclick = () => db.collection('finance').doc(t.id).delete();
-    list.appendChild(row);
+      <div class="flex items-center gap-2 shrink-0">
+        <span class="font-semibold tabular-nums ${inc ? 'text-emerald-400' : 'text-rose-400'}">${money(finAmt(t))}</span>
+        <button type="button" class="f-del text-slate-400 hover:text-rose p-1" aria-label="Удалить" title="Удалить">×</button>
+      </div>`;
+    row.querySelector('.f-del').onclick = async () => {
+      if (!confirm('Удалить запись?')) return;
+      try { await db.collection('finance').doc(t.id).delete(); }
+      catch (err) { console.error(err); alert('Не удалось удалить: ' + err.message); }
+    };
+    box.appendChild(row);
   });
-
-  document.getElementById('fin-income').textContent = money(income);
-  document.getElementById('fin-expense').textContent = money(expense);
-  document.getElementById('fin-balance').textContent = money(income - expense);
-
-  renderFinanceCharts(catTotals, income, expense);
 }
 
-function renderFinanceCharts(catTotals, totalIncome, totalExpense) {
-  const catCanvas = document.getElementById('chart-categories');
-  const sumCanvas = document.getElementById('chart-summary');
-
-  if (!catCanvas || !sumCanvas) return;
-
-  if (chartCategoryInstance) chartCategoryInstance.destroy();
-  if (chartSummaryInstance) chartSummaryInstance.destroy();
-
-  const labels = Object.keys(catTotals);
-  const data = Object.values(catTotals);
-
-  chartCategoryInstance = new Chart(catCanvas, {
-    type: 'doughnut',
-    data: {
-      labels: labels.length ? labels : ['Нет трат'],
-      datasets: [{
-        data: data.length ? data : [1],
-        backgroundColor: ['#2563EB', '#F43F5E', '#F59E0B', '#10B981', '#8B5CF6', '#06B6D4', '#EC4899', '#64748B']
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: { legend: { position: 'bottom', labels: { color: '#94A3B8', boxWidth: 10, font: { size: 10 } } } }
-    }
-  });
-
-  chartSummaryInstance = new Chart(sumCanvas, {
+function renderFinHistory(scope, recs, ws) {
+  const canvas = document.getElementById(`${scope}-chart`);
+  if (!canvas) return;
+  if (finCharts[scope]) { finCharts[scope].destroy(); finCharts[scope] = null; }
+  const weeks = Array.from({ length: 8 }, (_, i) => addDays(ws, -7 * (7 - i)));
+  const lab = weeks.map((w) => `${w.slice(8)}.${w.slice(5, 7)}`);
+  const sums = (type) => weeks.map((w) => finSum(recs.filter((t) => finIn(t, w) && (type === 'income' ? t.type === 'income' : t.type !== 'income'))));
+  finCharts[scope] = new Chart(canvas, {
     type: 'bar',
-    data: {
-      labels: ['Доходы', 'Расходы'],
-      datasets: [{
-        data: [totalIncome, totalExpense],
-        backgroundColor: ['#10B981', '#F43F5E']
-      }]
-    },
+    data: { labels: lab, datasets: [
+      { label: scope === 'family' ? 'Вложено' : 'Доходы', data: sums('income'), backgroundColor: '#10B981', borderRadius: 4 },
+      { label: 'Потрачено', data: sums('expense'), backgroundColor: '#F43F5E', borderRadius: 4 }
+    ] },
     options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        x: { ticks: { color: '#94A3B8' } },
-        y: { ticks: { color: '#94A3B8' } }
-      }
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'bottom', labels: { color: '#94A3B8', boxWidth: 10, font: { size: 10 } } } },
+      scales: { x: { ticks: { color: '#94A3B8', font: { size: 10 } }, grid: { display: false } }, y: { ticks: { color: '#94A3B8', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.06)' } } }
     }
   });
 }
@@ -2138,8 +2365,7 @@ function renderAll() {
 }
 
 function init() {
-  populateCategories();
-  if (document.getElementById('fin-date')) document.getElementById('fin-date').value = todayStr();
+  initFinance();
   initCalendar();
 
   updateNotificationBtnState();
