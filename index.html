@@ -133,6 +133,82 @@
   </div>
 </div>
 
+<!-- Event Editor Modal (create / edit) -->
+<div id="event-modal" class="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 hidden">
+  <form id="event-form" class="glass-card w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl p-5 space-y-4 max-h-[92vh] overflow-y-auto shadow-2xl" style="background: rgba(18,20,28,0.96);">
+    <div class="flex items-center justify-between">
+      <h3 class="font-bold text-base" id="event-modal-title">Новая задача</h3>
+      <button type="button" id="ev-close" aria-label="Закрыть" class="p-1.5 rounded-full text-slate-400 hover:text-white hover:bg-white/10 transition-all"><i data-lucide="x" class="w-4 h-4"></i></button>
+    </div>
+
+    <input required type="text" id="ev-desc" maxlength="200" placeholder="Название задачи" autocomplete="off" class="w-full bg-transparent border-0 border-b-2 border-white/15 focus:border-brand focus:outline-none text-lg font-semibold pb-2 placeholder-slate-600 transition-colors">
+
+    <div class="grid grid-cols-3 gap-3">
+      <div class="col-span-3 sm:col-span-1">
+        <label id="ev-date-label" for="ev-date" class="block text-xs font-medium text-slate-400 mb-1">Дата</label>
+        <input required type="date" id="ev-date" class="w-full rounded-xl glass-input px-2.5 py-2 text-xs">
+      </div>
+      <div>
+        <label for="ev-start" class="block text-xs font-medium text-slate-400 mb-1">Начало</label>
+        <input required type="time" id="ev-start" class="w-full rounded-xl glass-input px-2.5 py-2 text-xs">
+      </div>
+      <div>
+        <label for="ev-end" class="block text-xs font-medium text-slate-400 mb-1">Конец</label>
+        <input required type="time" id="ev-end" class="w-full rounded-xl glass-input px-2.5 py-2 text-xs">
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-3">
+      <div>
+        <label for="ev-priority" class="block text-xs font-medium text-slate-400 mb-1">Приоритет</label>
+        <select id="ev-priority" class="w-full rounded-xl glass-input px-3 py-2 text-xs">
+          <option value="Низкий" class="bg-dark-surface">Низкий</option>
+          <option value="Средний" selected class="bg-dark-surface">Средний</option>
+          <option value="Высокий" class="bg-dark-surface">Высокий</option>
+        </select>
+      </div>
+      <div>
+        <label for="ev-access" class="block text-xs font-medium text-slate-400 mb-1">Доступ</label>
+        <select id="ev-access" class="w-full rounded-xl glass-input px-3 py-2 text-xs">
+          <option value="private" class="bg-dark-surface">🔒 Личная</option>
+          <option value="shared" class="bg-dark-surface">👥 Общая</option>
+        </select>
+      </div>
+      <div class="col-span-2">
+        <label for="ev-repeat" class="block text-xs font-medium text-slate-400 mb-1">Повторение</label>
+        <select id="ev-repeat" class="w-full rounded-xl glass-input px-3 py-2 text-xs">
+          <option value="none" class="bg-dark-surface">Не повторяется</option>
+          <option value="daily" class="bg-dark-surface">Каждый день</option>
+          <option value="weekdays" class="bg-dark-surface">По будням (Пн–Пт)</option>
+          <option value="weekly" class="bg-dark-surface">Раз в неделю</option>
+          <option value="monthly" class="bg-dark-surface">Раз в месяц</option>
+        </select>
+      </div>
+    </div>
+
+    <p id="ev-series-hint" class="hidden text-[11px] text-amber leading-relaxed">Это повторяющаяся задача: изменения применяются ко всей серии.</p>
+    <p id="ev-error" class="hidden text-xs text-rose"></p>
+
+    <div class="flex flex-wrap items-center gap-2 pt-1">
+      <button type="button" id="ev-done" class="hidden text-xs px-3 py-2 rounded-xl border border-white/10 hover:bg-white/5 font-medium transition-all">Выполнено</button>
+      <button type="button" id="ev-details" class="hidden text-xs px-3 py-2 rounded-xl border border-white/10 hover:bg-white/5 font-medium transition-all">Заметки и комментарии</button>
+      <button type="button" id="ev-copy" class="hidden text-xs px-3 py-2 rounded-xl border border-white/10 hover:bg-white/5 font-medium transition-all">Копия на завтра</button>
+    </div>
+
+    <div class="flex items-center justify-between gap-2 pt-3 border-t border-white/10">
+      <button type="button" id="ev-delete" class="hidden text-xs px-3 py-2 rounded-xl text-rose hover:bg-rose/10 font-semibold transition-all">Удалить</button>
+      <div class="flex items-center gap-2 ml-auto">
+        <button type="button" id="ev-cancel" class="text-xs px-4 py-2.5 rounded-xl border border-white/10 hover:bg-white/5 font-medium transition-all">Отмена</button>
+        <button type="submit" id="ev-save" class="text-xs px-5 py-2.5 rounded-xl bg-brand hover:bg-brand-hover text-white font-semibold shadow-md shadow-blue-600/30 transition-all">Сохранить</button>
+      </div>
+    </div>
+  </form>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="fixed bottom-24 md:bottom-8 left-1/2 -translate-x-1/2 z-[60] px-4 py-2.5 rounded-xl bg-slate-100 text-slate-900 text-xs font-semibold shadow-2xl transition-all duration-200 opacity-0 pointer-events-none"></div>
+
+
 <div class="flex min-h-screen">
 
   <!-- Sidebar (Desktop) -->
@@ -192,7 +268,7 @@
       </div>
     </header>
 
-    <main class="flex-1 px-4 sm:px-8 lg:px-12 py-6 sm:py-10 pb-28 md:pb-12 max-w-6xl w-full mx-auto">
+    <main id="main-content" class="flex-1 px-4 sm:px-8 lg:px-12 py-6 sm:py-10 pb-28 md:pb-12 max-w-6xl w-full mx-auto">
 
       <!-- OVERVIEW TAB -->
       <section id="panel-overview" class="tab-panel space-y-6 sm:space-y-8">
@@ -255,69 +331,63 @@
       </section>
 
       <!-- SCHEDULE TAB -->
-      <section id="panel-schedule" class="tab-panel hidden space-y-6">
-        <div class="flex flex-wrap items-center justify-between gap-3"></div>
+      <section id="panel-schedule" class="tab-panel hidden space-y-4">
+        <h1 class="sr-only">Календарь</h1>
 
-        <form id="task-form" class="glass-card rounded-2xl p-5 space-y-4">
-          <input type="hidden" id="task-edit-id" value="">
-          
-          <div class="grid grid-cols-2 sm:grid-cols-6 gap-3">
-            <div class="col-span-2 sm:col-span-1">
-              <label class="block text-xs font-medium text-slate-400 mb-1">Дата</label>
-              <input required type="date" id="task-date" class="w-full rounded-xl glass-input px-3 py-2 text-xs">
-            </div>
-            <div class="col-span-1">
-              <label class="block text-xs font-medium text-slate-400 mb-1">Начало</label>
-              <input required type="time" id="task-start" class="w-full rounded-xl glass-input px-2.5 py-2 text-xs">
-            </div>
-            <div class="col-span-1">
-              <label class="block text-xs font-medium text-slate-400 mb-1">Конец</label>
-              <input required type="time" id="task-end" class="w-full rounded-xl glass-input px-2.5 py-2 text-xs">
-            </div>
-            <div class="col-span-2 sm:col-span-3">
-              <label class="block text-xs font-medium text-slate-400 mb-1">Описание задачи</label>
-              <input required type="text" id="task-desc" placeholder="Например: Встреча или созвон" class="w-full rounded-xl glass-input px-3.5 py-2 text-xs">
-            </div>
+        <!-- Toolbar -->
+        <div class="flex flex-wrap items-center gap-2 sm:gap-3">
+          <button id="cal-today" type="button" title="Сегодня (T)" class="px-3.5 py-2 rounded-xl border border-white/10 hover:bg-white/5 text-xs font-semibold transition-all">Сегодня</button>
+          <div class="flex items-center">
+            <button id="cal-prev" type="button" title="Назад (←)" aria-label="Назад" class="p-2 rounded-full hover:bg-white/10 transition-all"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+            <button id="cal-next" type="button" title="Вперёд (→)" aria-label="Вперёд" class="p-2 rounded-full hover:bg-white/10 transition-all"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
           </div>
+          <h2 id="cal-title" class="text-base sm:text-xl font-semibold tracking-tight min-w-0 truncate"></h2>
 
-          <div class="grid grid-cols-2 sm:grid-cols-6 gap-3 items-end">
-            <div>
-              <label class="block text-xs font-medium text-slate-400 mb-1">Приоритет</label>
-              <select id="task-priority" class="w-full rounded-xl glass-input px-3 py-2 text-xs">
-                <option value="Низкий" class="bg-dark-surface">Низкий</option>
-                <option value="Средний" selected class="bg-dark-surface">Средний</option>
-                <option value="Высокий" class="bg-dark-surface">Высокий</option>
-              </select>
+          <div class="ml-auto flex flex-wrap items-center justify-end gap-2">
+            <button id="flt-private" type="button" title="Показывать личные задачи" class="px-3 py-1.5 text-xs font-medium rounded-xl border transition-all">🔒 Мои</button>
+            <button id="flt-shared" type="button" title="Показывать общие задачи" class="px-3 py-1.5 text-xs font-medium rounded-xl border transition-all">👥 Общие</button>
+            <div class="flex border border-white/10 rounded-xl p-0.5 bg-white/5">
+              <button id="view-month" type="button" title="Месяц (M)" class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all">Месяц</button>
+              <button id="view-week" type="button" title="Неделя (W)" class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all">Неделя</button>
+              <button id="view-day" type="button" title="День (D)" class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all">День</button>
             </div>
-            <div>
-              <label class="block text-xs font-medium text-slate-400 mb-1">Доступ</label>
-              <select id="task-shared" class="w-full rounded-xl glass-input px-3 py-2 text-xs">
-                <option value="private" class="bg-dark-surface">🔒 Личная</option>
-                <option value="shared" selected class="bg-dark-surface">👥 Общая</option>
-              </select>
-            </div>
-            <div class="col-span-2 sm:col-span-2">
-              <label class="block text-xs font-medium text-slate-400 mb-1">Повторение</label>
-              <select id="task-repeat" class="w-full rounded-xl glass-input px-3 py-2 text-xs">
-                <option value="none" class="bg-dark-surface">Не повторяется</option>
-                <option value="daily" class="bg-dark-surface">Каждый день</option>
-                <option value="weekly" class="bg-dark-surface">Раз в неделю</option>
-              </select>
-            </div>
-            <div class="col-span-2 flex items-end justify-end gap-2">
-              <button type="button" id="copy-day-btn" class="w-1/2 rounded-xl border border-white/10 hover:bg-white/5 text-xs py-2.5 font-semibold transition-all truncate">📋 Скопировать</button>
-              <button type="submit" id="task-submit-btn" class="w-1/2 rounded-xl bg-brand hover:bg-brand-hover text-white text-xs font-semibold py-2.5 transition-all shadow-md shadow-blue-600/30 truncate">Добавить</button>
-            </div>
+            <button id="cal-create" type="button" title="Создать задачу (C)" class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-brand hover:bg-brand-hover text-white text-xs font-semibold shadow-md shadow-blue-600/30 transition-all">
+              <i data-lucide="plus" class="w-4 h-4"></i><span>Создать</span>
+            </button>
           </div>
-        </form>
-
-        <div class="glass-card rounded-2xl overflow-hidden">
-          <div id="schedule-scroll" class="max-h-[550px] overflow-y-auto overscroll-contain"></div>
         </div>
 
-        <div>
-          <h3 class="text-sm font-bold mb-3">Задачи этого дня</h3>
-          <div id="day-task-list" class="space-y-2.5"></div>
+        <div class="flex gap-4 items-start">
+          <!-- Mini calendar + legend (desktop) -->
+          <aside class="hidden lg:block w-56 shrink-0 space-y-4 sticky top-6">
+            <div class="glass-card rounded-2xl p-3" id="mini-cal"></div>
+            <div class="glass-card rounded-2xl p-3 space-y-2 text-xs text-slate-300">
+              <div class="font-semibold text-slate-400 mb-1">Приоритет</div>
+              <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-sm" style="background:#10B981"></span>Низкий</div>
+              <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-sm" style="background:#F59E0B"></span>Средний</div>
+              <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-sm" style="background:#F43F5E"></span>Высокий</div>
+              <div class="pt-2 mt-1 border-t border-white/10 text-[11px] text-slate-500 leading-relaxed">Клик по пустому времени — новая задача. Перетащите задачу, чтобы перенести, или потяните за нижний край, чтобы изменить длительность.</div>
+            </div>
+          </aside>
+
+          <div class="flex-1 min-w-0 space-y-5">
+            <div class="glass-card rounded-2xl overflow-hidden">
+              <div id="schedule-scroll" class="overflow-auto overscroll-contain"></div>
+            </div>
+
+            <!-- Agenda for the selected day (month view) -->
+            <div id="agenda-wrap" class="hidden">
+              <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                <h3 class="text-sm font-bold" id="agenda-title">Задачи дня</h3>
+                <div class="flex items-center gap-2">
+                  <button id="agenda-copy-day" type="button" class="text-xs px-3 py-1.5 rounded-xl border border-white/10 hover:bg-white/5 transition-all">Копировать день на завтра</button>
+                  <button id="agenda-add" type="button" class="text-xs px-3 py-1.5 rounded-xl bg-brand hover:bg-brand-hover text-white font-semibold transition-all">+ Добавить</button>
+                </div>
+              </div>
+              <div id="day-task-list" class="space-y-2.5"></div>
+              <p class="text-[11px] text-slate-500 mt-3">Двойной клик по дню в календаре — создать задачу на эту дату.</p>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -651,7 +721,7 @@ function checkTaskNotifications() {
   const todayS = todayStr();
 
   state.tasks.forEach(t => {
-    if (t.date === todayS && !t.done && t.start) {
+    if (taskOccursOnDate(t, todayS) && !isTaskDone(t, todayS) && t.start) {
       let timeParts = t.start.split(':');
       if (timeParts.length < 2) return;
       let h = parseInt(timeParts[0], 10);
@@ -663,24 +733,24 @@ function checkTaskNotifications() {
       const diffMs = taskTime.getTime() - now.getTime();
       const diffMinutes = Math.floor(diffMs / 60000);
 
-      if (diffMinutes >= 28 && diffMinutes <= 30 && !notifiedTaskIds.has(`${t.id}_30`)) {
-        notifiedTaskIds.add(`${t.id}_30`);
+      if (diffMinutes >= 28 && diffMinutes <= 30 && !notifiedTaskIds.has(`${t.id}_${todayS}_30`)) {
+        notifiedTaskIds.add(`${t.id}_${todayS}_30`);
         new Notification("Напоминание ⏳ (через 30 мин)", {
           body: `${t.shared ? '👥' : '🔒'} ${t.desc} начнётся в ${t.start}`,
           icon: "https://cdn-icons-png.flaticon.com/512/854/854878.png"
         });
       }
 
-      if (diffMinutes >= 13 && diffMinutes <= 15 && !notifiedTaskIds.has(`${t.id}_15`)) {
-        notifiedTaskIds.add(`${t.id}_15`);
+      if (diffMinutes >= 13 && diffMinutes <= 15 && !notifiedTaskIds.has(`${t.id}_${todayS}_15`)) {
+        notifiedTaskIds.add(`${t.id}_${todayS}_15`);
         new Notification("Скоро задача! ⏰ (через 15 мин)", {
           body: `${t.shared ? '👥' : '🔒'} ${t.desc} начнётся в ${t.start}`,
           icon: "https://cdn-icons-png.flaticon.com/512/854/854878.png"
         });
       }
 
-      if (diffMinutes >= -1 && diffMinutes <= 1 && !notifiedTaskIds.has(`${t.id}_now`)) {
-        notifiedTaskIds.add(`${t.id}_now`);
+      if (diffMinutes >= -1 && diffMinutes <= 1 && !notifiedTaskIds.has(`${t.id}_${todayS}_now`)) {
+        notifiedTaskIds.add(`${t.id}_${todayS}_now`);
         new Notification("Время задачи! 🎯", {
           body: `${t.shared ? '👥' : '🔒'} ${t.desc} прямо сейчас (${t.start})`,
           icon: "https://cdn-icons-png.flaticon.com/512/854/854878.png"
@@ -797,385 +867,892 @@ function renderNav() {
 function setTab(id) {
   state.activeTab = id;
   TABS.forEach(t => document.getElementById('panel-' + t.id).classList.toggle('hidden', t.id !== id));
+  const mc = document.getElementById('main-content');
+  if (mc) { mc.classList.toggle('max-w-6xl', id !== 'schedule'); mc.classList.toggle('max-w-[1500px]', id === 'schedule'); }
+  if (id === 'schedule') calNeedsScroll = true;
   renderNav();
   renderAll();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-/* ============================= SCHEDULE ============================= */
-const ROW_HEIGHT = 48;
-let scheduleViewMode = 'month';
-let currentMonthDate = new Date();
-let currentEditingTaskId = null;
-
-function taskOccursOnDate(t, dateStr) {
-  if (dateStr < t.date) return false;
-  if (t.repeat === 'daily') return true;
-  if (t.repeat === 'weekly') {
-    const d1 = new Date(t.date + 'T00:00:00');
-    const d2 = new Date(dateStr + 'T00:00:00');
-    return d1.getDay() === d2.getDay();
-  }
-  return t.date === dateStr;
-}
-
-document.getElementById('task-form').onsubmit = async (e) => {
-  e.preventDefault();
-  const editId = document.getElementById('task-edit-id').value;
-  const isShared = document.getElementById('task-shared').value === 'shared';
-  
-  const payload = {
-    userId: isShared ? `couple_${coupleCode}` : currentUser.uid,
-    date: document.getElementById('task-date').value || scheduleDate,
-    start: document.getElementById('task-start').value || '09:00',
-    end: document.getElementById('task-end').value || '10:00',
-    desc: document.getElementById('task-desc').value.trim(),
-    priority: document.getElementById('task-priority').value,
-    repeat: document.getElementById('task-repeat').value || 'none',
-    shared: isShared
-  };
-
-  if (editId) {
-    await db.collection('tasks').doc(editId).update(payload);
-    document.getElementById('task-edit-id').value = '';
-    document.getElementById('task-submit-btn').textContent = 'Добавить';
-  } else {
-    payload.createdById = currentUser.uid;
-    payload.done = false;
-    payload.note = '';
-    payload.comments = [];
-    await db.collection('tasks').add(payload);
-  }
-
-  document.getElementById('task-form').reset();
-  document.getElementById('task-date').value = scheduleDate;
+/* ============================= SCHEDULE (Google-style calendar) ============================= */
+const HOUR_H = 56;      // px per hour in the week/day grid
+const SNAP_MIN = 15;    // snapping for click / drag / resize (minutes)
+const MIN_DUR = 15;     // minimum event duration (minutes)
+const WEEKDAYS_SHORT = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+const EVT_COLORS = {
+  'Низкий':  { bg: 'rgba(16,185,129,0.22)', bd: '#10B981' },
+  'Средний': { bg: 'rgba(245,158,11,0.22)', bd: '#F59E0B' },
+  'Высокий': { bg: 'rgba(244,63,94,0.24)',  bd: '#F43F5E' }
 };
 
-function editTask(id) {
-  const t = state.tasks.find(x => x.id === id);
-  if (!t) return;
-  document.getElementById('task-edit-id').value = t.id;
-  document.getElementById('task-date').value = t.date;
-  document.getElementById('task-start').value = t.start;
-  document.getElementById('task-end').value = t.end;
-  document.getElementById('task-desc').value = t.desc;
-  document.getElementById('task-priority').value = t.priority;
-  document.getElementById('task-repeat').value = t.repeat || 'none';
-  document.getElementById('task-shared').value = t.shared ? 'shared' : 'private';
-  document.getElementById('task-submit-btn').textContent = 'Сохранить';
-  document.getElementById('task-form').scrollIntoView({ behavior: 'smooth' });
+function loadJson(key, fallback) {
+  try { const v = JSON.parse(localStorage.getItem(key)); return v == null ? fallback : v; }
+  catch (e) { return fallback; }
+}
+function saveLocal(key, val) {
+  try { localStorage.setItem(key, typeof val === 'string' ? val : JSON.stringify(val)); } catch (e) { /* storage unavailable */ }
 }
 
-async function copyTaskToNextDay(id) {
-  const t = state.tasks.find(x => x.id === id);
-  if (!t) return;
-  const d = new Date(scheduleDate + 'T00:00:00');
-  d.setDate(d.getDate() + 1);
-  const nextDate = fmtDate(d);
+let calView = (() => {
+  const saved = localStorage.getItem('cd_cal_view');
+  if (['month', 'week', 'day'].includes(saved)) return saved;
+  return window.innerWidth < 640 ? 'day' : 'week';
+})();
+let calFilter = Object.assign({ private: true, shared: true }, loadJson('cd_cal_filter', {}));
+let miniMonth = null;            // Date (1st of month) shown in the mini calendar; null = follow scheduleDate
+let calBusy = false;             // true while a drag is in progress: snapshots must not re-render the grid
+let calPendingRender = false;
+let calNeedsScroll = true;       // scroll the grid to "now" on the next render
+let calRenderedToday = todayStr();
+let editorCtx = { id: null, dateStr: null };
+let currentEditingTaskId = null;
 
-  const clone = { ...t, date: nextDate, createdById: currentUser.uid, done: false, repeat: 'none' };
-  delete clone.id;
+/* ---- small helpers ---- */
+const $ = (id) => document.getElementById(id);
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+function parseDate(s) { return new Date(s + 'T00:00:00'); }
+function addDays(s, n) { const d = parseDate(s); d.setDate(d.getDate() + n); return fmtDate(d); }
+function weekStart(s) { const d = parseDate(s); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return fmtDate(d); }
+function hmToMin(hm, fallback) {
+  if (!hm) return fallback;
+  const p = String(hm).split(':');
+  const h = parseInt(p[0], 10), m = parseInt(p[1] || '0', 10);
+  if (Number.isNaN(h)) return fallback;
+  return h * 60 + (Number.isNaN(m) ? 0 : m);
+}
+function minToHm(min) {
+  min = clamp(Math.round(min), 0, 1439);
+  return String(Math.floor(min / 60)).padStart(2, '0') + ':' + String(min % 60).padStart(2, '0');
+}
+function byStart(a, b) { return hmToMin(a.start, 540) - hmToMin(b.start, 540); }
+function showToast(msg) {
+  const el = $('toast');
+  el.textContent = msg;
+  el.classList.remove('opacity-0');
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(() => el.classList.add('opacity-0'), 2400);
+}
+
+/* ---- task model helpers ---- */
+// Supported repeat values: none | daily | weekdays | weekly | monthly (old docs only have none/daily/weekly)
+function taskOccursOnDate(t, dateStr) {
+  if (!t.date || dateStr < t.date) return false;
+  const rep = t.repeat || 'none';
+  if (rep === 'none') return t.date === dateStr;
+  if (rep === 'daily') return true;
+  const d1 = parseDate(t.date), d2 = parseDate(dateStr);
+  if (rep === 'weekly') return d1.getDay() === d2.getDay();
+  if (rep === 'weekdays') { const w = d2.getDay(); return w >= 1 && w <= 5; }
+  if (rep === 'monthly') return d1.getDate() === d2.getDate();
+  return t.date === dateStr;
+}
+// One-off tasks use `done`; repeating tasks keep a per-date map `doneDates`
+function isTaskDone(t, dateStr) {
+  if ((t.repeat || 'none') === 'none') return !!t.done;
+  return !!(t.doneDates && t.doneDates[dateStr]);
+}
+async function toggleTaskDone(id, dateStr) {
+  const t = state.tasks.find((x) => x.id === id);
+  if (!t) return;
+  const next = !isTaskDone(t, dateStr);
+  const ref = db.collection('tasks').doc(id);
+  try {
+    if ((t.repeat || 'none') === 'none') await ref.update({ done: next });
+    else await ref.update(new firebase.firestore.FieldPath('doneDates', dateStr), next ? true : firebase.firestore.FieldValue.delete());
+  } catch (err) {
+    console.error(err);
+    alert('Не удалось сохранить: ' + err.message);
+  }
+}
+function visibleTasksOn(dateStr) {
+  return state.tasks.filter((t) => (t.shared ? calFilter.shared : calFilter.private) && taskOccursOnDate(t, dateStr));
+}
+async function deleteTask(id) {
+  const t = state.tasks.find((x) => x.id === id);
+  if (!t) return;
+  if ((t.repeat || 'none') !== 'none' && !confirm('Это повторяющаяся задача. Удалить всю серию?')) return;
+  try { await db.collection('tasks').doc(id).delete(); }
+  catch (err) { console.error(err); alert('Не удалось удалить: ' + err.message); }
+}
+async function copyTaskToDate(t, targetDate) {
+  const clone = {
+    userId: t.userId, date: targetDate, start: t.start, end: t.end, desc: t.desc,
+    priority: t.priority, repeat: 'none', shared: !!t.shared,
+    createdById: currentUser.uid, done: false, doneDates: {}, note: t.note || '', comments: []
+  };
   await db.collection('tasks').add(clone);
 }
 
-document.getElementById('copy-day-btn').onclick = async () => {
-  const currentTasks = state.tasks.filter(t => taskOccursOnDate(t, scheduleDate) && t.repeat === 'none');
-  if (!currentTasks.length) {
-    alert('На этот день нет разовых задач.');
-    return;
-  }
-  const d = new Date(scheduleDate + 'T00:00:00');
-  d.setDate(d.getDate() + 1);
-  const nextDate = fmtDate(d);
-
-  for (const t of currentTasks) {
-    const clone = { ...t, date: nextDate, createdById: currentUser.uid, done: false };
-    delete clone.id;
-    await db.collection('tasks').add(clone);
-  }
-};
-
-function openTaskDetails(id) {
-  currentEditingTaskId = id;
-  const t = state.tasks.find(x => x.id === id);
-  if (!t) return;
-
-  document.getElementById('modal-task-title').textContent = `${t.shared ? '👥' : '🔒'} ${t.desc}`;
-  document.getElementById('modal-task-note').value = t.note || '';
-  renderCommentsList(t.comments || []);
-  document.getElementById('task-modal').classList.remove('hidden');
+/* ---- overlap layout: events that overlap share the width of their cluster ---- */
+function layoutDayEvents(items) {
+  items.sort((a, b) => a.s - b.s || b.e - a.e);
+  const out = [];
+  let cluster = [], clusterEnd = -1;
+  const flush = () => {
+    if (!cluster.length) return;
+    const colEnds = [];
+    cluster.forEach((it) => {
+      let c = colEnds.findIndex((end) => end <= it.s);
+      if (c === -1) { c = colEnds.length; colEnds.push(it.e); } else colEnds[c] = it.e;
+      it.col = c;
+    });
+    cluster.forEach((it) => { it.cols = colEnds.length; out.push(it); });
+    cluster = [];
+    clusterEnd = -1;
+  };
+  items.forEach((it) => {
+    if (cluster.length && it.s >= clusterEnd) flush();
+    cluster.push(it);
+    clusterEnd = Math.max(clusterEnd, it.e);
+  });
+  flush();
+  return out;
 }
 
+/* ---- navigation ---- */
+function calTitleText() {
+  const d = parseDate(scheduleDate);
+  const monthName = (x) => capitalize(x.toLocaleDateString('ru-RU', { month: 'long' }));
+  if (calView === 'month') return `${monthName(d)} ${d.getFullYear()}`;
+  if (calView === 'day') {
+    return `${capitalize(d.toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' }))} ${d.getFullYear()}`;
+  }
+  const a = parseDate(weekStart(scheduleDate)), b = parseDate(addDays(weekStart(scheduleDate), 6));
+  const left = a.toLocaleDateString('ru-RU', a.getMonth() === b.getMonth() ? { day: 'numeric' } : { day: 'numeric', month: 'short' });
+  const right = b.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+  return `${left} – ${right} ${b.getFullYear()}`;
+}
+function shiftSchedule(dir) {
+  if (calView === 'day') scheduleDate = addDays(scheduleDate, dir);
+  else if (calView === 'week') scheduleDate = addDays(scheduleDate, 7 * dir);
+  else {
+    const d = parseDate(scheduleDate);
+    const target = new Date(d.getFullYear(), d.getMonth() + dir, 1);
+    const dim = new Date(target.getFullYear(), target.getMonth() + 1, 0).getDate();
+    target.setDate(Math.min(d.getDate(), dim));
+    scheduleDate = fmtDate(target);
+  }
+  miniMonth = null;
+  renderSchedule();
+}
+function goToday() { scheduleDate = todayStr(); miniMonth = null; calNeedsScroll = true; renderSchedule(); }
+function setCalView(v) {
+  if (!['month', 'week', 'day'].includes(v) || v === calView) return;
+  calView = v;
+  saveLocal('cd_cal_view', v);
+  calNeedsScroll = true;
+  renderSchedule();
+}
+function openDay(ds) { scheduleDate = ds; miniMonth = null; calView = 'day'; saveLocal('cd_cal_view', 'day'); calNeedsScroll = true; renderSchedule(); }
+
+/* ---- main render ---- */
+function renderSchedule() {
+  if (state.activeTab !== 'schedule') return;
+  if (calBusy) { calPendingRender = true; return; }
+  const wrap = $('schedule-scroll');
+  if (!wrap) return;
+  calRenderedToday = todayStr();
+  $('cal-title').textContent = calTitleText();
+  updateToolbarState();
+
+  const prevTop = wrap.scrollTop, prevLeft = wrap.scrollLeft;
+  const agenda = $('agenda-wrap');
+  if (calView === 'month') {
+    wrap.style.maxHeight = '';
+    wrap.style.minHeight = '';
+    renderMonthView(wrap);
+    agenda.classList.remove('hidden');
+    renderAgenda();
+  } else {
+    wrap.style.maxHeight = 'calc(100vh - 230px)';
+    wrap.style.minHeight = '420px';
+    const dates = calView === 'day'
+      ? [scheduleDate]
+      : Array.from({ length: 7 }, (_, i) => addDays(weekStart(scheduleDate), i));
+    renderTimeGrid(wrap, dates);
+    agenda.classList.add('hidden');
+    if (calNeedsScroll) { scrollToNow(wrap, dates); calNeedsScroll = false; }
+    else { wrap.scrollTop = prevTop; wrap.scrollLeft = prevLeft; }
+  }
+  renderMiniCal();
+  lucide.createIcons();
+}
+
+function updateToolbarState() {
+  ['month', 'week', 'day'].forEach((v) => {
+    const b = $('view-' + v);
+    b.className = 'px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ' + (calView === v ? 'bg-brand text-white shadow-md' : 'text-slate-400 hover:text-white');
+    b.setAttribute('aria-pressed', String(calView === v));
+  });
+  [['private', 'flt-private'], ['shared', 'flt-shared']].forEach(([key, id]) => {
+    const b = $(id);
+    b.className = 'px-3 py-1.5 text-xs font-medium rounded-xl border transition-all ' + (calFilter[key] ? 'border-brand/40 bg-brand/10 text-white' : 'border-white/10 text-slate-500 opacity-70');
+    b.setAttribute('aria-pressed', String(calFilter[key]));
+  });
+}
+
+function nowTopPx() {
+  const n = new Date();
+  return (n.getHours() * 60 + n.getMinutes()) / 60 * HOUR_H;
+}
+function scrollToNow(wrap, dates) {
+  const target = dates.includes(todayStr()) ? Math.max(0, nowTopPx() - 2 * HOUR_H) : 7 * HOUR_H;
+  wrap.scrollTop = target;
+  wrap.scrollLeft = 0;
+}
+function updateNowLine() {
+  if (state.activeTab !== 'schedule') return;
+  if (calRenderedToday !== todayStr()) { renderSchedule(); return; }
+  document.querySelectorAll('.now-line').forEach((el) => { el.style.top = (nowTopPx() - 1) + 'px'; });
+}
+
+/* ---- week / day time grid ---- */
+function renderTimeGrid(wrap, dates) {
+  const N = dates.length;
+  const todayS = todayStr();
+  const todayIdx = dates.indexOf(todayS);
+  const minW = N > 1 ? 56 + N * 92 : 0;
+
+  const headerCells = dates.map((ds, i) => {
+    const d = parseDate(ds);
+    const isToday = ds === todayS;
+    const weekend = d.getDay() === 0 || d.getDay() === 6;
+    return `<button type="button" data-goto="${ds}" title="Открыть день" class="py-2 flex flex-col items-center gap-0.5 hover:bg-white/5 transition-colors ${i > 0 ? 'border-l border-white/[0.07]' : ''}">
+      <span class="text-[11px] font-medium ${isToday ? 'text-brand' : weekend ? 'text-rose' : 'text-slate-400'}">${WEEKDAYS_SHORT[(d.getDay() + 6) % 7]}</span>
+      <span class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${isToday ? 'bg-brand text-white' : 'text-slate-200'}">${d.getDate()}</span>
+    </button>`;
+  }).join('');
+
+  let labels = '', lines = '';
+  for (let h = 0; h < 24; h++) {
+    if (h > 0) labels += `<span class="absolute right-2 text-[10px] text-slate-500 font-mono tabular-nums" style="top:${h * HOUR_H - 7}px">${String(h).padStart(2, '0')}:00</span>`;
+    lines += `<div class="absolute inset-x-0 border-t border-white/[0.07]" style="top:${h * HOUR_H}px"></div>`;
+    lines += `<div class="absolute inset-x-0 border-t border-white/[0.03]" style="top:${h * HOUR_H + HOUR_H / 2}px"></div>`;
+  }
+  const vlines = dates.map((_, i) => i === 0 ? '' : `<div class="absolute top-0 bottom-0 border-l border-white/[0.07]" style="left:${i / N * 100}%"></div>`).join('');
+  const todayBg = todayIdx >= 0 ? `<div class="absolute top-0 bottom-0 bg-brand/[0.05]" style="left:${todayIdx / N * 100}%;width:${100 / N}%"></div>` : '';
+  const nowLine = todayIdx >= 0
+    ? `<div class="now-line absolute z-10 pointer-events-none" style="top:${nowTopPx() - 1}px;left:${todayIdx / N * 100}%;width:${100 / N}%"><div class="h-0.5 bg-rose w-full"></div><div class="absolute -left-1 -top-[3px] w-2 h-2 rounded-full bg-rose"></div></div>`
+    : '';
+
+  wrap.innerHTML = `
+    <div style="min-width:${minW}px">
+      <div class="sticky top-0 z-30 flex bg-dark-surface border-b border-white/10">
+        <div class="w-14 shrink-0"></div>
+        <div class="flex-1 grid" style="grid-template-columns:repeat(${N},minmax(0,1fr))">${headerCells}</div>
+      </div>
+      <div class="flex">
+        <div class="w-14 shrink-0 relative" style="height:${24 * HOUR_H}px">${labels}</div>
+        <div id="cal-grid" class="relative flex-1 select-none cursor-cell" style="height:${24 * HOUR_H}px">
+          ${lines}${vlines}${todayBg}
+          <div id="cal-events" class="absolute inset-0"></div>
+          ${nowLine}
+        </div>
+      </div>
+    </div>`;
+
+  const layer = $('cal-events');
+  dates.forEach((ds, colIdx) => {
+    const items = visibleTasksOn(ds).map((t) => {
+      const s = clamp(hmToMin(t.start, 540), 0, 1439);
+      let e = hmToMin(t.end, s + 60);
+      if (e <= s) e = Math.min(1440, s + MIN_DUR);
+      return { t, s, e: Math.min(e, 1440) };
+    });
+    layoutDayEvents(items).forEach((it) => layer.appendChild(buildEventBlock(it, ds, colIdx, N, dates)));
+  });
+  attachGridCreate($('cal-grid'), $('cal-events'), dates);
+}
+
+function buildEventBlock(it, ds, colIdx, N, dates) {
+  const { t, s, e } = it;
+  const c = EVT_COLORS[t.priority] || EVT_COLORS['Средний'];
+  const done = isTaskDone(t, ds);
+  const heightPx = Math.max((e - s) / 60 * HOUR_H, 20);
+  const compact = heightPx < 40;
+  const icon = t.shared ? '👥' : '🔒';
+  const checkStyle = `border-color:${c.bd};${done ? `background:${c.bd};` : ''}`;
+  const check = `<button type="button" class="blk-check shrink-0 w-3.5 h-3.5 rounded-full border flex items-center justify-center" style="${checkStyle}" aria-label="Отметить выполненной">${done ? '<span class="text-[9px] leading-none text-white">✓</span>' : ''}</button>`;
+
+  const el = document.createElement('div');
+  el.className = 'cal-evt group absolute rounded-lg overflow-hidden cursor-pointer hover:shadow-lg transition-shadow';
+  el.dataset.id = t.id;
+  el.dataset.date = ds;
+  // Google-style cascade: overlapping events partly cover each other instead of shrinking to slivers
+  const lf = it.col * Math.min(1 / it.cols, N > 1 ? 0.2 : 0.12);
+  const wf = it.cols > 1 ? 1 - lf : 1;
+  const leftCss = `calc(${(colIdx + lf) / N * 100}% + 2px)`;
+  const widthCss = `calc(${wf / N * 100}% - 4px)`;
+  el.dataset.left = leftCss;
+  el.dataset.width = widthCss;
+  const zi = 5 + it.col;
+  el.style.cssText = `z-index:${zi};top:${s / 60 * HOUR_H}px;height:${heightPx}px;left:${leftCss};width:${widthCss};background-image:linear-gradient(${c.bg},${c.bg});background-color:#12141C;border-left:3px solid ${c.bd};opacity:${done ? 0.55 : 1};`;
+  el.title = `${t.start}–${t.end}  ${t.desc}`;
+
+  el.innerHTML = compact
+    ? `<div class="flex items-center gap-1 px-1.5 h-full text-[11px] leading-none">${check}
+         <span class="blk-time font-mono opacity-75 shrink-0">${esc(t.start)}</span>
+         <span class="truncate font-medium ${done ? 'line-through' : ''}">${esc(t.desc)}</span>
+       </div>`
+    : `<div class="px-2 py-1 h-full flex flex-col gap-0.5 text-xs">
+         <div class="flex items-start gap-1.5">${check}
+           <span class="font-semibold leading-snug break-words line-clamp-2 ${done ? 'line-through' : ''}">${icon} ${esc(t.desc)}</span>
+         </div>
+         <span class="blk-time font-mono text-[10px] opacity-75 pl-5">${esc(t.start)}–${esc(t.end)}</span>
+       </div>`;
+  el.insertAdjacentHTML('beforeend', '<div class="blk-resize absolute inset-x-0 bottom-0 h-1.5 cursor-ns-resize"></div>');
+
+  const chk = el.querySelector('.blk-check');
+  chk.addEventListener('pointerdown', (ev) => ev.stopPropagation());
+  chk.addEventListener('click', (ev) => { ev.stopPropagation(); toggleTaskDone(t.id, ds); });
+  el.addEventListener('click', () => {
+    if (el._justDragged) { el._justDragged = false; return; }
+    openEventEditor({ id: t.id, dateStr: ds });
+  });
+  attachEventDrag(el, it, colIdx, N, dates);
+  return el;
+}
+
+/* ---- drag to move / resize an existing event (mouse & pen; touch uses tap -> editor) ---- */
+function attachEventDrag(el, it, colIdx, N, dates) {
+  const t = it.t;
+  const recurring = (t.repeat || 'none') !== 'none';
+  el.addEventListener('pointerdown', (ev) => {
+    if (ev.button !== 0 || ev.pointerType === 'touch') return;
+    const grid = $('cal-grid');
+    if (!grid) return;
+    const rect = grid.getBoundingClientRect();
+    const colW = rect.width / N;
+    const resize = !!ev.target.closest('.blk-resize');
+    const startX = ev.clientX, startY = ev.clientY;
+    const dur = it.e - it.s;
+    let dragging = false, newS = it.s, newE = it.e, newCol = colIdx;
+    const timeEls = el.querySelectorAll('.blk-time');
+
+    const paint = () => {
+      el.style.top = (newS / 60 * HOUR_H) + 'px';
+      el.style.height = Math.max((newE - newS) / 60 * HOUR_H, 20) + 'px';
+      if (newCol !== colIdx) {
+        el.style.left = `calc(${newCol / N * 100}% + 2px)`;
+        el.style.width = `calc(${100 / N}% - 4px)`;
+      } else {
+        el.style.left = el.dataset.left;
+        el.style.width = el.dataset.width;
+      }
+      timeEls.forEach((n) => {
+        n.textContent = n.textContent.includes('–') ? `${minToHm(newS)}–${minToHm(newE)}` : minToHm(newS);
+      });
+    };
+    const onMove = (mv) => {
+      const dx = mv.clientX - startX, dy = mv.clientY - startY;
+      if (!dragging) {
+        if (Math.hypot(dx, dy) < 4) return;
+        dragging = true;
+        calBusy = true;
+        el.classList.add('shadow-2xl', 'ring-1', 'ring-white/40');
+        el.style.zIndex = '25';
+        document.body.style.cursor = resize ? 'ns-resize' : 'grabbing';
+      }
+      const dMin = Math.round((dy / HOUR_H * 60) / SNAP_MIN) * SNAP_MIN;
+      if (resize) {
+        newE = clamp(it.e + dMin, it.s + MIN_DUR, 1440);
+      } else {
+        newS = clamp(it.s + dMin, 0, 1440 - dur);
+        newE = newS + dur;
+        newCol = recurring ? colIdx : clamp(Math.floor((mv.clientX - rect.left) / colW), 0, N - 1);
+      }
+      paint();
+    };
+    const finish = (commit) => {
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+      window.removeEventListener('pointercancel', onCancel);
+      document.body.style.cursor = '';
+      if (!dragging) return;
+      el._justDragged = true;
+      setTimeout(() => { el._justDragged = false; }, 0);
+      calBusy = false;
+      calPendingRender = false;
+      const changed = newS !== it.s || newE !== it.e || newCol !== colIdx;
+      if (commit && changed) commitEventMove(t, dates[newCol], newS, newE);
+      renderSchedule();
+    };
+    const onUp = () => finish(true);
+    const onCancel = () => finish(false);
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onCancel);
+  });
+}
+
+async function commitEventMove(t, newDate, s, e) {
+  const patch = { start: minToHm(s), end: minToHm(e) };
+  if ((t.repeat || 'none') === 'none') patch.date = newDate;
+  Object.assign(t, patch); // optimistic: keeps the UI in place until Firestore echoes the write
+  try { await db.collection('tasks').doc(t.id).update(patch); }
+  catch (err) { console.error(err); alert('Не удалось перенести задачу: ' + err.message); }
+}
+
+/* ---- click / drag on empty grid to create ---- */
+function attachGridCreate(grid, layer, dates) {
+  const N = dates.length;
+  grid.addEventListener('pointerdown', (ev) => {
+    if (ev.button !== 0 || ev.target.closest('.cal-evt')) return;
+    const rect = grid.getBoundingClientRect();
+    const colW = rect.width / N;
+    const col = clamp(Math.floor((ev.clientX - rect.left) / colW), 0, N - 1);
+    const minAt = (y) => clamp((y - rect.top) / HOUR_H * 60, 0, 1440);
+    const startMin = minAt(ev.clientY);
+    const startX = ev.clientX, startY = ev.clientY;
+    const isTouch = ev.pointerType === 'touch';
+    let dragging = false, ghost = null, a = 0, b = 0;
+
+    const paintGhost = () => {
+      ghost.style.top = (a / 60 * HOUR_H) + 'px';
+      ghost.style.height = ((b - a) / 60 * HOUR_H) + 'px';
+      ghost.style.left = `calc(${col / N * 100}% + 2px)`;
+      ghost.style.width = `calc(${100 / N}% - 4px)`;
+      ghost.textContent = `${minToHm(a)}–${minToHm(b)}`;
+    };
+    const cleanup = () => {
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+      window.removeEventListener('pointercancel', onCancel);
+      document.body.style.cursor = '';
+    };
+    const onMove = (mv) => {
+      if (isTouch) return;
+      if (!dragging) {
+        if (Math.abs(mv.clientY - startY) < 5) return;
+        dragging = true;
+        calBusy = true;
+        document.body.style.cursor = 'ns-resize';
+        ghost = document.createElement('div');
+        ghost.className = 'absolute z-20 rounded-lg bg-brand/30 border border-brand pointer-events-none text-[11px] px-2 py-1 font-mono';
+        layer.appendChild(ghost);
+      }
+      const cur = minAt(mv.clientY);
+      a = Math.floor(Math.min(startMin, cur) / SNAP_MIN) * SNAP_MIN;
+      b = Math.ceil(Math.max(startMin, cur) / SNAP_MIN) * SNAP_MIN;
+      if (b - a < SNAP_MIN) b = a + SNAP_MIN;
+      b = Math.min(b, 1440);
+      paintGhost();
+    };
+    const onUp = (up) => {
+      cleanup();
+      if (dragging) {
+        calBusy = false;
+        calPendingRender = false;
+        ghost.remove();
+        openEventEditor({ id: null, dateStr: dates[col], start: minToHm(a), end: minToHm(b) });
+        return;
+      }
+      if (isTouch && Math.hypot(up.clientX - startX, up.clientY - startY) > 8) return; // it was a scroll
+      const s0 = Math.floor(startMin / 30) * 30;
+      openEventEditor({ id: null, dateStr: dates[col], start: minToHm(s0), end: minToHm(Math.min(s0 + 60, 1439)) });
+    };
+    const onCancel = () => {
+      cleanup();
+      if (dragging) { calBusy = false; if (ghost) ghost.remove(); renderSchedule(); }
+    };
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onCancel);
+  });
+}
+
+/* ---- month view ---- */
+function renderMonthView(wrap) {
+  const anchor = parseDate(scheduleDate);
+  const first = new Date(anchor.getFullYear(), anchor.getMonth(), 1);
+  const offset = (first.getDay() + 6) % 7;
+  const dim = new Date(anchor.getFullYear(), anchor.getMonth() + 1, 0).getDate();
+  const weeks = Math.ceil((offset + dim) / 7);
+  const gridStart = addDays(fmtDate(first), -offset);
+  const todayS = todayStr();
+  const maxChips = window.innerWidth < 640 ? 2 : 3;
+
+  let html = `<div class="grid grid-cols-7 text-center text-[11px] font-semibold py-2 border-b border-white/10 text-slate-400 bg-dark-surface">`
+    + WEEKDAYS_SHORT.map((w, i) => `<div class="${i >= 5 ? 'text-rose' : ''}">${w}</div>`).join('')
+    + `</div><div class="grid grid-cols-7 bg-white/[0.06] gap-px">`;
+
+  for (let i = 0; i < weeks * 7; i++) {
+    const ds = addDays(gridStart, i);
+    const d = parseDate(ds);
+    const inMonth = d.getMonth() === anchor.getMonth();
+    const tasks = visibleTasksOn(ds).sort(byStart);
+    const isToday = ds === todayS;
+    const monthLabel = d.getDate() === 1
+      ? `<span class="hidden sm:inline text-[11px] font-semibold text-slate-300 ml-1">${d.toLocaleDateString('ru-RU', { month: 'short' })}</span>` : '';
+    const chips = tasks.slice(0, maxChips).map((t) => {
+      const c = EVT_COLORS[t.priority] || EVT_COLORS['Средний'];
+      const done = isTaskDone(t, ds);
+      return `<button type="button" data-evt="${t.id}" data-date="${ds}" title="${esc(t.start + ' ' + t.desc)}" class="w-full flex items-center gap-1 text-left text-[10px] sm:text-[11px] rounded px-1 py-0.5 overflow-hidden ${done ? 'line-through opacity-60' : ''}" style="background:${c.bg};border-left:2px solid ${c.bd}">
+        <span class="font-mono opacity-70 hidden sm:inline shrink-0">${esc(t.start)}</span><span class="truncate">${esc(t.desc)}</span></button>`;
+    }).join('');
+    const more = tasks.length > maxChips
+      ? `<button type="button" data-goto="${ds}" class="text-[10px] text-slate-400 hover:text-white text-left px-1">ещё ${tasks.length - maxChips}</button>` : '';
+
+    html += `<div class="month-cell bg-dark-surface min-h-[84px] sm:min-h-[112px] p-1 sm:p-1.5 flex flex-col gap-0.5 cursor-pointer transition-colors hover:bg-white/[0.04] ${ds === scheduleDate ? 'ring-1 ring-inset ring-brand/70' : ''} ${inMonth ? '' : 'opacity-45'}" data-date="${ds}">
+      <div class="flex items-center justify-center sm:justify-start">
+        <button type="button" data-goto="${ds}" title="Открыть день" class="w-6 h-6 rounded-full text-xs font-semibold flex items-center justify-center ${isToday ? 'bg-brand text-white' : 'text-slate-300 hover:bg-white/10'}">${d.getDate()}</button>${monthLabel}
+      </div>${chips}${more}
+    </div>`;
+  }
+  html += '</div>';
+  wrap.innerHTML = html;
+}
+
+function selectMonthDate(ds) {
+  scheduleDate = ds;
+  miniMonth = null;
+  document.querySelectorAll('#schedule-scroll .month-cell').forEach((c) => {
+    const sel = c.dataset.date === ds;
+    c.classList.toggle('ring-1', sel);
+    c.classList.toggle('ring-inset', sel);
+    c.classList.toggle('ring-brand/70', sel);
+  });
+  renderAgenda();
+  renderMiniCal();
+  lucide.createIcons();
+}
+
+/* ---- agenda (selected day list, shown under the month grid) ---- */
+function buildAgendaRow(t, ds) {
+  const c = EVT_COLORS[t.priority] || EVT_COLORS['Средний'];
+  const done = isTaskDone(t, ds);
+  const row = document.createElement('div');
+  row.className = 'flex items-center gap-3 p-3 rounded-xl glass-card text-xs sm:text-sm cursor-pointer hover:bg-white/[0.04] transition-colors';
+  row.style.borderLeft = `3px solid ${c.bd}`;
+  row.innerHTML = `
+    <button type="button" class="a-check w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0" style="border-color:${c.bd};${done ? `background:${c.bd};` : ''}" aria-label="Отметить выполненной">${done ? '<span class="text-[11px] leading-none text-white">✓</span>' : ''}</button>
+    <div class="min-w-0 flex-1">
+      <div class="flex items-center gap-2 flex-wrap">
+        <span class="font-mono text-xs text-slate-400">${esc(t.start)}–${esc(t.end)}</span>
+        <span class="text-[11px]">${t.shared ? '👥' : '🔒'}</span>
+        ${(t.repeat || 'none') !== 'none' ? '<span class="text-[10px] px-1.5 py-0.5 bg-brand/10 text-brand rounded-md font-semibold">🔁 повтор</span>' : ''}
+        ${t.note ? '<span class="text-[11px]" title="Есть заметка">📝</span>' : ''}${(t.comments && t.comments.length) ? `<span class="text-[11px] text-slate-400" title="Комментарии">💬 ${t.comments.length}</span>` : ''}
+      </div>
+      <p class="truncate ${done ? 'line-through opacity-50' : ''}">${esc(t.desc)}</p>
+    </div>
+    <div class="flex items-center gap-0.5 shrink-0">
+      <button type="button" class="a-copy p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10" title="Копия на завтра" aria-label="Копия на завтра"><i data-lucide="copy" class="w-4 h-4"></i></button>
+      <button type="button" class="a-del p-1.5 rounded-lg text-rose hover:bg-rose/10" title="Удалить" aria-label="Удалить"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+    </div>`;
+  row.querySelector('.a-check').addEventListener('click', (e) => { e.stopPropagation(); toggleTaskDone(t.id, ds); });
+  row.querySelector('.a-copy').addEventListener('click', (e) => { e.stopPropagation(); copyOneToNextDay(t, ds); });
+  row.querySelector('.a-del').addEventListener('click', (e) => { e.stopPropagation(); deleteTask(t.id); });
+  row.addEventListener('click', () => openEventEditor({ id: t.id, dateStr: ds }));
+  return row;
+}
+function renderAgenda() {
+  const list = $('day-task-list');
+  if (!list) return;
+  $('agenda-title').textContent = capitalize(parseDate(scheduleDate).toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' }));
+  list.innerHTML = '';
+  const tasks = visibleTasksOn(scheduleDate).sort(byStart);
+  if (!tasks.length) {
+    list.innerHTML = '<p class="text-xs text-slate-500">На этот день задач нет.</p>';
+    return;
+  }
+  tasks.forEach((t) => list.appendChild(buildAgendaRow(t, scheduleDate)));
+}
+async function copyOneToNextDay(t, fromDate) {
+  try { await copyTaskToDate(t, addDays(fromDate, 1)); showToast('Копия создана на завтра'); }
+  catch (err) { console.error(err); alert('Не удалось скопировать: ' + err.message); }
+}
+async function copyDayToNextDay() {
+  const oneOff = visibleTasksOn(scheduleDate).filter((t) => (t.repeat || 'none') === 'none');
+  if (!oneOff.length) { showToast('Нет разовых задач для копирования'); return; }
+  const target = addDays(scheduleDate, 1);
+  try {
+    for (const t of oneOff) await copyTaskToDate(t, target);
+    showToast(`Скопировано задач: ${oneOff.length}`);
+  } catch (err) { console.error(err); alert('Не удалось скопировать: ' + err.message); }
+}
+
+/* ---- mini calendar ---- */
+function renderMiniCal() {
+  const el = $('mini-cal');
+  if (!el) return;
+  const sel = parseDate(scheduleDate);
+  const base = miniMonth || new Date(sel.getFullYear(), sel.getMonth(), 1);
+  const y = base.getFullYear(), m = base.getMonth();
+  const first = new Date(y, m, 1);
+  const offset = (first.getDay() + 6) % 7;
+  const gridStart = addDays(fmtDate(first), -offset);
+  const wkS = weekStart(scheduleDate), wkE = addDays(wkS, 6);
+  const todayS = todayStr();
+  const monthName = capitalize(first.toLocaleDateString('ru-RU', { month: 'long' }));
+
+  let html = `<div class="flex items-center justify-between mb-2 px-1">
+      <span class="text-xs font-semibold">${monthName} ${y}</span>
+      <div class="flex">
+        <button type="button" data-mini="-1" aria-label="Предыдущий месяц" class="p-1 rounded-full hover:bg-white/10"><i data-lucide="chevron-left" class="w-3.5 h-3.5"></i></button>
+        <button type="button" data-mini="1" aria-label="Следующий месяц" class="p-1 rounded-full hover:bg-white/10"><i data-lucide="chevron-right" class="w-3.5 h-3.5"></i></button>
+      </div>
+    </div>
+    <div class="grid grid-cols-7 text-center text-[10px] text-slate-500 mb-1">${['П', 'В', 'С', 'Ч', 'П', 'С', 'В'].map((w) => `<div>${w}</div>`).join('')}</div>
+    <div class="grid grid-cols-7 gap-y-0.5">`;
+  for (let i = 0; i < 42; i++) {
+    const ds = addDays(gridStart, i);
+    const d = parseDate(ds);
+    const inMonth = d.getMonth() === m;
+    const isToday = ds === todayS;
+    const inWeek = calView === 'week' && ds >= wkS && ds <= wkE;
+    const isSel = ds === scheduleDate;
+    const has = visibleTasksOn(ds).length > 0;
+    html += `<button type="button" data-mini-date="${ds}" class="relative h-7 text-[11px] flex items-center justify-center ${inWeek ? 'bg-white/[0.07]' : ''} ${isToday ? '' : ''} rounded-full ${isToday ? 'bg-brand text-white font-semibold' : isSel && !inWeek ? 'ring-1 ring-brand text-white' : inMonth ? 'text-slate-200 hover:bg-white/10' : 'text-slate-600 hover:bg-white/10'}">${d.getDate()}${has && !isToday ? '<span class="absolute bottom-0.5 w-1 h-1 rounded-full bg-brand/80"></span>' : ''}</button>`;
+  }
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+/* ---- event editor modal ---- */
+function isEditorOpen() { return !$('event-modal').classList.contains('hidden'); }
+function openEventEditor({ id = null, dateStr = scheduleDate, start = null, end = null } = {}) {
+  const t = id ? state.tasks.find((x) => x.id === id) : null;
+  if (id && !t) return;
+  editorCtx = { id, dateStr };
+  const rep = t ? (t.repeat || 'none') : 'none';
+  $('event-modal-title').textContent = t ? 'Изменить задачу' : 'Новая задача';
+  $('ev-desc').value = t ? t.desc : '';
+  $('ev-date').value = t ? t.date : dateStr;
+  $('ev-date-label').textContent = rep !== 'none' ? 'Начало серии' : 'Дата';
+  $('ev-start').value = t ? t.start : (start || '09:00');
+  $('ev-end').value = t ? t.end : (end || '10:00');
+  $('ev-priority').value = t ? (t.priority || 'Средний') : 'Средний';
+  $('ev-access').value = t ? (t.shared ? 'shared' : 'private') : (coupleCode ? 'shared' : 'private');
+  $('ev-repeat').value = rep;
+  $('ev-series-hint').classList.toggle('hidden', rep === 'none');
+  $('ev-error').classList.add('hidden');
+  ['ev-delete', 'ev-copy', 'ev-done', 'ev-details'].forEach((k) => $(k).classList.toggle('hidden', !t));
+  $('ev-save').textContent = t ? 'Сохранить' : 'Создать';
+  if (t) $('ev-done').textContent = isTaskDone(t, dateStr) ? 'Вернуть в работу' : '✓ Выполнено';
+  $('event-modal').classList.remove('hidden');
+  setTimeout(() => $('ev-desc').focus(), 30);
+}
+function closeEventEditor() {
+  const ae = document.activeElement;
+  if (ae && $('event-modal').contains(ae)) ae.blur();
+  $('event-modal').classList.add('hidden');
+  editorCtx = { id: null, dateStr: null };
+}
+function createFromToolbar() {
+  let start = '09:00';
+  if (scheduleDate === todayStr()) {
+    const n = new Date();
+    start = minToHm(Math.min((n.getHours() + 1) * 60, 23 * 60));
+  }
+  const end = minToHm(Math.min(hmToMin(start, 540) + 60, 1439));
+  openEventEditor({ id: null, dateStr: scheduleDate, start, end });
+}
+async function saveEvent(e) {
+  e.preventDefault();
+  if (!currentUser) return;
+  const err = (msg) => { $('ev-error').textContent = msg; $('ev-error').classList.remove('hidden'); };
+  const desc = $('ev-desc').value.trim();
+  const date = $('ev-date').value;
+  const start = $('ev-start').value, end = $('ev-end').value;
+  if (!desc) return err('Введите название задачи');
+  if (!date || !start || !end) return err('Укажите дату и время');
+  if (hmToMin(end, 0) <= hmToMin(start, 0)) return err('Конец должен быть позже начала');
+  const isShared = $('ev-access').value === 'shared';
+  if (isShared && !coupleCode) return err('Для общих задач сначала задайте код пары (кнопка «Код пары» слева) или выберите «Личная».');
+
+  const payload = {
+    userId: isShared ? `couple_${coupleCode}` : currentUser.uid,
+    date, start, end, desc,
+    priority: $('ev-priority').value,
+    repeat: $('ev-repeat').value || 'none',
+    shared: isShared
+  };
+  $('ev-save').disabled = true;
+  try {
+    if (editorCtx.id) {
+      await db.collection('tasks').doc(editorCtx.id).update(payload);
+    } else {
+      await db.collection('tasks').add(Object.assign(payload, {
+        createdById: currentUser.uid, done: false, doneDates: {}, note: '', comments: []
+      }));
+      scheduleDate = date;
+      miniMonth = null;
+    }
+    closeEventEditor();
+    renderSchedule();
+  } catch (ex) {
+    console.error(ex);
+    err('Не удалось сохранить: ' + ex.message);
+  } finally {
+    $('ev-save').disabled = false;
+  }
+}
+
+/* ---- task details modal (note + comments) ---- */
+function openTaskDetails(id) {
+  currentEditingTaskId = id;
+  const t = state.tasks.find((x) => x.id === id);
+  if (!t) return;
+  $('modal-task-title').textContent = `${t.shared ? '👥' : '🔒'} ${t.desc}`;
+  $('modal-task-note').value = t.note || '';
+  renderCommentsList(t.comments || []);
+  $('task-modal').classList.remove('hidden');
+}
 function renderCommentsList(comments) {
-  const list = document.getElementById('modal-comments-list');
+  const list = $('modal-comments-list');
   list.innerHTML = '';
   if (!comments.length) {
     list.innerHTML = '<p class="text-xs text-slate-500">Комментариев пока нет</p>';
     return;
   }
-  comments.forEach(c => {
+  comments.forEach((c) => {
     const item = document.createElement('div');
     item.className = 'p-2.5 rounded-xl bg-white/5 text-xs border border-white/5';
     item.innerHTML = `
       <div class="flex justify-between text-[10px] text-slate-400 mb-1">
-        <span class="font-bold text-brand">${c.author}</span>
-        <span>${c.time}</span>
+        <span class="font-bold text-brand">${esc(c.author)}</span>
+        <span>${esc(c.time)}</span>
       </div>
-      <p class="text-slate-200">${c.text}</p>
-    `;
+      <p class="text-slate-200">${esc(c.text)}</p>`;
     list.appendChild(item);
   });
 }
-
-document.getElementById('save-note-btn').onclick = async () => {
+$('save-note-btn').onclick = async () => {
   if (!currentEditingTaskId) return;
-  const noteText = document.getElementById('modal-task-note').value.trim();
-  await db.collection('tasks').doc(currentEditingTaskId).update({ note: noteText });
-  alert('Заметка сохранена!');
+  await db.collection('tasks').doc(currentEditingTaskId).update({ note: $('modal-task-note').value.trim() });
+  showToast('Заметка сохранена');
 };
-
-document.getElementById('add-comment-btn').onclick = async () => {
+$('add-comment-btn').onclick = async () => {
   if (!currentEditingTaskId) return;
-  const input = document.getElementById('modal-comment-input');
+  const input = $('modal-comment-input');
   const text = input.value.trim();
   if (!text) return;
-
-  const t = state.tasks.find(x => x.id === currentEditingTaskId);
-  const comments = t.comments || [];
-  
+  const t = state.tasks.find((x) => x.id === currentEditingTaskId);
+  const comments = (t && t.comments) ? t.comments.slice() : [];
   comments.push({
     author: currentUser.email.split('@')[0],
-    text: text,
+    text,
     time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
   });
-
   await db.collection('tasks').doc(currentEditingTaskId).update({ comments });
   input.value = '';
   renderCommentsList(comments);
 };
+$('close-task-modal').onclick = () => $('task-modal').classList.add('hidden');
 
-document.getElementById('close-task-modal').onclick = () => {
-  document.getElementById('task-modal').classList.add('hidden');
-};
-
-async function toggleTaskDone(id, currentDone) {
-  await db.collection('tasks').doc(id).update({ done: !currentDone });
+/* ---- wiring ---- */
+function anyModalOpen() {
+  return isEditorOpen() || !$('task-modal').classList.contains('hidden') || !$('auth-modal').classList.contains('hidden');
+}
+function onCalKeydown(e) {
+  if (e.key === 'Escape') {
+    if (isEditorOpen()) { closeEventEditor(); return; }
+    if (!$('task-modal').classList.contains('hidden')) { $('task-modal').classList.add('hidden'); return; }
+  }
+  if (state.activeTab !== 'schedule' || anyModalOpen()) return;
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  const tag = (e.target.tagName || '').toLowerCase();
+  if (['input', 'textarea', 'select'].includes(tag) || e.target.isContentEditable) return;
+  switch (e.code) {
+    case 'KeyT': goToday(); break;
+    case 'KeyM': setCalView('month'); break;
+    case 'KeyW': setCalView('week'); break;
+    case 'KeyD': setCalView('day'); break;
+    case 'KeyC': e.preventDefault(); createFromToolbar(); break;
+    case 'ArrowLeft': case 'KeyJ': shiftSchedule(-1); break;
+    case 'ArrowRight': case 'KeyK': shiftSchedule(1); break;
+    default: break;
+  }
 }
 
-async function deleteTask(id) {
-  await db.collection('tasks').doc(id).delete();
-}
+function initCalendar() {
+  $('cal-today').onclick = goToday;
+  $('cal-prev').onclick = () => shiftSchedule(-1);
+  $('cal-next').onclick = () => shiftSchedule(1);
+  $('view-month').onclick = () => setCalView('month');
+  $('view-week').onclick = () => setCalView('week');
+  $('view-day').onclick = () => setCalView('day');
+  $('cal-create').onclick = createFromToolbar;
+  [['private', 'flt-private'], ['shared', 'flt-shared']].forEach(([key, id]) => {
+    $(id).onclick = () => { calFilter[key] = !calFilter[key]; saveLocal('cd_cal_filter', calFilter); renderSchedule(); };
+  });
+  $('agenda-add').onclick = () => openEventEditor({ id: null, dateStr: scheduleDate, start: '09:00', end: '10:00' });
+  $('agenda-copy-day').onclick = copyDayToNextDay;
 
-function renderSchedule() {
-  const container = document.getElementById('panel-schedule');
-  if (!container) return;
-
-  const headerWrapper = container.querySelector('.flex.flex-wrap');
-  if (headerWrapper) {
-    headerWrapper.innerHTML = `
-      <div>
-        <h1 class="text-2xl sm:text-4xl font-extrabold tracking-tight">Календарь</h1>
-        <p class="text-xs sm:text-sm text-slate-400 mt-1">Планирование по дням и месяцам</p>
-      </div>
-      <div class="flex items-center gap-2 flex-wrap">
-        <div class="flex border border-white/10 rounded-xl overflow-hidden p-0.5 bg-white/5">
-          <button id="view-mode-month" class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${scheduleViewMode === 'month' ? 'bg-brand text-white shadow-md' : 'text-slate-400'}">Месяц</button>
-          <button id="view-mode-day" class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${scheduleViewMode === 'day' ? 'bg-brand text-white shadow-md' : 'text-slate-400'}">День</button>
-        </div>
-        <button id="sched-prev" class="p-2 rounded-xl border border-white/10 hover:bg-white/5"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
-        <span class="text-xs sm:text-sm font-semibold min-w-[100px] text-center" id="calendar-title"></span>
-        <button id="sched-next" class="p-2 rounded-xl border border-white/10 hover:bg-white/5"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
-        <button id="sched-today" class="text-xs px-3 py-2 rounded-xl border border-white/10 hover:bg-white/5 font-medium">Сегодня</button>
-      </div>
-    `;
-
-    document.getElementById('view-mode-month').onclick = () => { scheduleViewMode = 'month'; renderSchedule(); };
-    document.getElementById('view-mode-day').onclick = () => { scheduleViewMode = 'day'; renderSchedule(); };
-    
-    document.getElementById('sched-prev').onclick = () => {
-      if (scheduleViewMode === 'month') currentMonthDate.setMonth(currentMonthDate.getMonth() - 1);
-      else { const d = new Date(scheduleDate); d.setDate(d.getDate() - 1); scheduleDate = fmtDate(d); }
-      renderSchedule();
-    };
-    document.getElementById('sched-next').onclick = () => {
-      if (scheduleViewMode === 'month') currentMonthDate.setMonth(currentMonthDate.getMonth() + 1);
-      else { const d = new Date(scheduleDate); d.setDate(d.getDate() + 1); scheduleDate = fmtDate(d); }
-      renderSchedule();
-    };
-    document.getElementById('sched-today').onclick = () => {
-      currentMonthDate = new Date();
-      scheduleDate = todayStr();
-      renderSchedule();
-    };
-  }
-
-  const scrollWrap = document.getElementById('schedule-scroll');
-  if (scheduleViewMode === 'month') renderMonthView(scrollWrap);
-  else renderDayView(scrollWrap);
-  lucide.createIcons();
-}
-
-function renderMonthView(wrap) {
-  const year = currentMonthDate.getFullYear();
-  const month = currentMonthDate.getMonth();
-  const monthNames = ["Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"];
-  document.getElementById('calendar-title').textContent = `${monthNames[month]} ${year}`;
-
-  const firstDay = new Date(year, month, 1);
-  const lastDay = new Date(year, month + 1, 0);
-  let startDayOfWeek = (firstDay.getDay() + 6) % 7; 
-  const totalDays = lastDay.getDate();
-
-  let html = `
-    <div class="grid grid-cols-7 border-b border-white/10 text-center text-xs font-bold py-2 bg-white/5 text-slate-400">
-      <div>Пн</div><div>Вт</div><div>Ср</div><div>Чт</div><div>Пт</div><div class="text-rose">Сб</div><div class="text-rose">Вс</div>
-    </div>
-    <div class="grid grid-cols-7 auto-rows-fr bg-white/5 gap-[1px]">
-  `;
-
-  for (let i = 0; i < startDayOfWeek; i++) {
-    html += `<div class="bg-dark-surface/40 min-h-[70px] sm:min-h-[95px] p-1.5 opacity-20"></div>`;
-  }
-
-  const today = todayStr();
-  for (let day = 1; day <= totalDays; day++) {
-    const dStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    const dayTasks = state.tasks.filter(t => taskOccursOnDate(t, dStr));
-    const isToday = dStr === today;
-
-    html += `
-      <div class="month-day-cell bg-dark-surface min-h-[70px] sm:min-h-[95px] p-1.5 flex flex-col justify-start cursor-pointer hover:bg-white/5 transition-all" data-date="${dStr}">
-        <div class="flex items-center justify-between mb-1">
-          <span class="text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center ${isToday ? 'bg-brand text-white shadow-md' : 'text-slate-300'}">${day}</span>
-          ${dayTasks.length ? `<span class="text-[10px] text-slate-500 font-mono">${dayTasks.length}</span>` : ''}
-        </div>
-        <div class="space-y-1 overflow-y-auto max-h-[50px] sm:max-h-[70px]">
-          ${dayTasks.map(t => {
-            const p = PRIORITY_STYLES[t.priority] || PRIORITY_STYLES['Средний'];
-            return `
-              <div class="text-[10px] px-1.5 py-0.5 rounded-lg border truncate font-medium ${p.bg}${p.text} ${t.done ? 'strike' : ''}" title="${t.desc}">
-                ${t.shared ? '👥' : '🔒'} ${t.desc}
-              </div>
-            `;
-          }).join('')}
-        </div>
-      </div>
-    `;
-  }
-
-  html += `</div>`;
-  wrap.innerHTML = html;
-
-  wrap.querySelectorAll('.month-day-cell').forEach(cell => {
-    cell.onclick = () => {
-      const date = cell.dataset.date;
-      scheduleDate = date;
-      if (document.getElementById('task-date')) {
-        document.getElementById('task-date').value = date;
-      }
-      scheduleViewMode = 'day';
-      renderSchedule();
-    };
+  // one delegated click handler for header cells, month cells and chips
+  $('schedule-scroll').addEventListener('click', (e) => {
+    const evt = e.target.closest('[data-evt]');
+    if (evt) { openEventEditor({ id: evt.dataset.evt, dateStr: evt.dataset.date }); return; }
+    const go = e.target.closest('[data-goto]');
+    if (go) { openDay(go.dataset.goto); return; }
+    const cell = e.target.closest('.month-cell');
+    if (cell && calView === 'month' && cell.dataset.date !== scheduleDate) selectMonthDate(cell.dataset.date);
+  });
+  $('schedule-scroll').addEventListener('dblclick', (e) => {
+    const cell = e.target.closest('.month-cell');
+    if (!cell || e.target.closest('[data-evt],[data-goto]')) return;
+    openEventEditor({ id: null, dateStr: cell.dataset.date, start: '09:00', end: '10:00' });
+  });
+  $('mini-cal').addEventListener('click', (e) => {
+    const nav = e.target.closest('[data-mini]');
+    if (nav) {
+      const cur = miniMonth || (() => { const d = parseDate(scheduleDate); return new Date(d.getFullYear(), d.getMonth(), 1); })();
+      miniMonth = new Date(cur.getFullYear(), cur.getMonth() + parseInt(nav.dataset.mini, 10), 1);
+      renderMiniCal();
+      lucide.createIcons();
+      return;
+    }
+    const day = e.target.closest('[data-mini-date]');
+    if (day) { scheduleDate = day.dataset.miniDate; miniMonth = null; renderSchedule(); }
   });
 
-  renderDayTaskList(state.tasks.filter(t => taskOccursOnDate(t, scheduleDate)));
-}
-
-function renderDayView(wrap) {
-  document.getElementById('calendar-title').textContent = scheduleDate;
-  
-  wrap.innerHTML = `
-    <div class="flex">
-      <div id="schedule-hours" class="w-14 shrink-0 border-r border-white/10"></div>
-      <div id="schedule-track" class="flex-1 relative cursor-cell min-h-[550px]"></div>
-    </div>
-  `;
-
-  const track = document.getElementById('schedule-track');
-  const hoursEl = document.getElementById('schedule-hours');
-
-  for (let h = 0; h < 24; h++) {
-    const hCell = document.createElement('div');
-    hCell.className = 'relative border-b border-white/10 text-[10px] text-slate-500 font-mono';
-    hCell.style.height = ROW_HEIGHT + 'px';
-    hCell.innerHTML = `<span class="absolute -top-2.5 right-2">${String(h).padStart(2,'0')}:00</span>`;
-    hoursEl.appendChild(hCell);
-
-    const line = document.createElement('div');
-    line.className = 'absolute left-0 right-0 border-b border-white/5';
-    line.style.top = (h * ROW_HEIGHT) + 'px';
-    line.style.height = ROW_HEIGHT + 'px';
-    track.appendChild(line);
-  }
-
-  const dayTasks = state.tasks.filter(t => taskOccursOnDate(t, scheduleDate));
-  dayTasks.forEach(t => {
-    const [sh, sm] = (t.start || '09:00').split(':').map(Number);
-    const [eh, em] = (t.end || '10:00').split(':').map(Number);
-    const top = ((sh * 60 + sm) / 60) * ROW_HEIGHT;
-    const height = Math.max((((eh * 60 + em) - (sh * 60 + sm)) / 60) * ROW_HEIGHT, 26);
-    const p = PRIORITY_STYLES[t.priority] || PRIORITY_STYLES['Средний'];
-
-    const block = document.createElement('div');
-    block.className = `absolute left-2 right-2 rounded-xl border border-white/10 backdrop-blur-md px-2.5 py-1 flex items-center justify-between text-xs ${p.bg} ${p.text} ${t.done ? 'opacity-40' : ''}`;
-    block.style.top = top + 'px';
-    block.style.height = height + 'px';
-    block.innerHTML = `
-      <div class="flex items-center gap-2 truncate cursor-pointer" onclick="openTaskDetails('${t.id}')">
-        <button class="t-check w-4 h-4 rounded-md border border-current flex items-center justify-center shrink-0">
-          ${t.done ? '✓' : ''}
-        </button>
-        <span class="font-mono text-[10px] opacity-80">${t.start}</span>
-        <span class="truncate font-medium ${t.done ? 'strike' : ''}">${t.shared ? '👥' : '🔒'} ${t.desc}</span>
-      </div>
-      <div class="flex items-center gap-1">
-        <button class="t-copy hover:text-white p-0.5">📋</button>
-        <button class="t-edit hover:text-white p-0.5">✏️</button>
-        <button class="t-del hover:text-rose p-0.5">×</button>
-      </div>
-    `;
-    block.querySelector('.t-check').onclick = (e) => { e.stopPropagation(); toggleTaskDone(t.id, t.done); };
-    block.querySelector('.t-copy').onclick = (e) => { e.stopPropagation(); copyTaskToNextDay(t.id); };
-    block.querySelector('.t-edit').onclick = (e) => { e.stopPropagation(); editTask(t.id); };
-    block.querySelector('.t-del').onclick = (e) => { e.stopPropagation(); deleteTask(t.id); };
-    track.appendChild(block);
+  // editor modal
+  $('event-form').addEventListener('submit', saveEvent);
+  $('ev-close').onclick = closeEventEditor;
+  $('ev-cancel').onclick = closeEventEditor;
+  $('event-modal').addEventListener('mousedown', (e) => { if (e.target === $('event-modal')) closeEventEditor(); });
+  $('ev-repeat').addEventListener('change', () => {
+    const t = editorCtx.id ? state.tasks.find((x) => x.id === editorCtx.id) : null;
+    $('ev-series-hint').classList.toggle('hidden', $('ev-repeat').value === 'none' || !t);
+    $('ev-date-label').textContent = $('ev-repeat').value !== 'none' ? 'Начало серии' : 'Дата';
   });
+  $('ev-delete').onclick = async () => {
+    const id = editorCtx.id;
+    if (!id) return;
+    const t = state.tasks.find((x) => x.id === id);
+    const wasRepeat = t && (t.repeat || 'none') !== 'none';
+    await deleteTask(id);
+    // deleteTask asks for confirmation on series; close only if it actually went through
+    if (!wasRepeat || !state.tasks.some((x) => x.id === id)) closeEventEditor();
+  };
+  $('ev-done').onclick = async () => {
+    if (!editorCtx.id) return;
+    await toggleTaskDone(editorCtx.id, editorCtx.dateStr);
+    closeEventEditor();
+  };
+  $('ev-copy').onclick = async () => {
+    const t = state.tasks.find((x) => x.id === editorCtx.id);
+    if (!t) return;
+    await copyOneToNextDay(t, editorCtx.dateStr);
+    closeEventEditor();
+  };
+  $('ev-details').onclick = () => {
+    const id = editorCtx.id;
+    closeEventEditor();
+    if (id) openTaskDetails(id);
+  };
 
-  renderDayTaskList(dayTasks);
-}
-
-function renderDayTaskList(tasks) {
-  const list = document.getElementById('day-task-list');
-  if (!list) return;
-  list.innerHTML = '';
-  if (!tasks.length) {
-    list.innerHTML = '<p class="text-xs text-slate-500">Задач на выбранный день нет.</p>';
-    return;
-  }
-  tasks.forEach(t => {
-    const row = document.createElement('div');
-    row.className = 'flex items-center justify-between p-3 rounded-xl glass-card text-xs sm:text-sm';
-    row.innerHTML = `
-      <div class="flex items-center gap-3 cursor-pointer min-w-0 pr-2" onclick="openTaskDetails('${t.id}')">
-        <button class="t-check w-5 h-5 rounded-lg border border-brand flex items-center justify-center text-brand shrink-0">
-          ${t.done ? '✓' : ''}
-        </button>
-        <span class="font-mono text-xs text-slate-400 shrink-0">${t.start}</span>
-        <span class="truncate ${t.done ? 'strike' : ''}">${t.shared ? '👥' : '🔒'} ${t.desc}</span>
-        ${t.repeat !== 'none' ? '<span class="text-[10px] px-1.5 py-0.5 bg-brand/10 text-brand rounded-md font-semibold shrink-0">🔁</span>' : ''}
-      </div>
-      <div class="flex items-center gap-2 shrink-0">
-        <button class="t-copy text-slate-400 hover:text-white p-1" title="Скопировать">📋</button>
-        <button class="t-edit text-brand p-1">✏️</button>
-        <button class="t-del text-rose p-1">×</button>
-      </div>
-    `;
-    row.querySelector('.t-check').onclick = (e) => { e.stopPropagation(); toggleTaskDone(t.id, t.done); };
-    row.querySelector('.t-copy').onclick = (e) => { e.stopPropagation(); copyTaskToNextDay(t.id); };
-    row.querySelector('.t-edit').onclick = (e) => { e.stopPropagation(); editTask(t.id); };
-    row.querySelector('.t-del').onclick = (e) => { e.stopPropagation(); deleteTask(t.id); };
-    list.appendChild(row);
+  document.addEventListener('keydown', onCalKeydown);
+  let resizeTimer = null;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => { if (state.activeTab === 'schedule') renderSchedule(); }, 150);
   });
+  setInterval(updateNowLine, 30000);
 }
 
 /* ============================= HABITS ============================= */
@@ -1517,7 +2094,7 @@ function renderOverview() {
   if (ovDate) ovDate.textContent = capitalize(formatRuDate(new Date()));
 
   const todaysTasks = state.tasks.filter(t => taskOccursOnDate(t, todayS));
-  const doneTasks = todaysTasks.filter(t => t.done).length;
+  const doneTasks = todaysTasks.filter(t => isTaskDone(t, todayS)).length;
   const tPct = todaysTasks.length ? Math.round((doneTasks / todaysTasks.length) * 100) : 0;
   document.getElementById('ov-task-pct').textContent = tPct + '%';
   document.getElementById('ov-task-count').textContent = `${doneTasks} из ${todaysTasks.length}`;
@@ -1530,6 +2107,22 @@ function renderOverview() {
   document.getElementById('ov-habit-bar').style.width = hPct + '%';
 
   const todaysSpent = state.finance.filter(t => t.date === todayS && t.type === 'expense').reduce((s,t) => s + t.amount, 0);
+  const ovList = document.getElementById('ov-task-list');
+  if (ovList) {
+    ovList.innerHTML = '';
+    const nowMin = new Date().getHours() * 60 + new Date().getMinutes();
+    const rows = todaysTasks.slice().sort(byStart);
+    if (!rows.length) ovList.innerHTML = '<p class="text-xs text-slate-500">На сегодня задач нет.</p>';
+    rows.forEach(t => {
+      const done = isTaskDone(t, todayS);
+      const past = hmToMin(t.end, 0) < nowMin;
+      const row = document.createElement('div');
+      row.className = 'flex items-center gap-3 p-2.5 rounded-xl bg-white/[0.03] text-xs cursor-pointer hover:bg-white/[0.06] ' + (done || past ? 'opacity-50' : '');
+      row.innerHTML = `<span class="font-mono text-slate-400 shrink-0">${esc(t.start)}</span><span class="truncate flex-1 ${done ? 'line-through' : ''}">${t.shared ? '👥' : '🔒'} ${esc(t.desc)}</span>${done ? '<span class="text-emerald-400">✓</span>' : ''}`;
+      row.onclick = () => { scheduleDate = todayS; setTab('schedule'); openEventEditor({ id: t.id, dateStr: todayS }); };
+      ovList.appendChild(row);
+    });
+  }
   document.getElementById('ov-spend-today').textContent = money(todaysSpent);
 }
 
@@ -1547,7 +2140,7 @@ function renderAll() {
 function init() {
   populateCategories();
   if (document.getElementById('fin-date')) document.getElementById('fin-date').value = todayStr();
-  if (document.getElementById('task-date')) document.getElementById('task-date').value = scheduleDate;
+  initCalendar();
 
   updateNotificationBtnState();
   renderNav();
